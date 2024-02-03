@@ -118,6 +118,8 @@ class Events(Item):
                             args := self.callback_units.get(key, ())
                         ):
                         await func(call, args)
+                except AttributeError:
+                    pass
                 except Exception as error:
                     logging.exception(error)
         except RuntimeError:

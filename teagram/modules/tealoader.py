@@ -84,7 +84,7 @@ class LoaderMod(loader.Module):
         )
 
     async def decline_load(self, call):        
-        await call.delete()
+        await call.edit("✅", self.inline._generate_markup([]))
     
     async def repo_cmd(self, message: types.Message, args: str):
         """Установить репозиторий с модулями. Использование: repo <ссылка на репозиторий или reset>"""
