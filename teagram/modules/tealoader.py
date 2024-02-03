@@ -65,6 +65,26 @@ class LoaderMod(loader.Module):
             f"""👉 <code>{prefix + command}</code> {f"- <b>{module.command_handlers[command].__doc__}</b>" or ''}"""
             for command in module.command_handlers
         )
+
+    async def accept_load(self, call, source: str, warning: str):
+        empty = self.inline._generate_markup([])
+
+        data = await self.manager.load_module(source)
+        module = '_'.join(data.lower().split())
+        if data is True:
+            return await call.edit(
+                self.strings['downdedreq'], empty)
+        
+        self.manager.warnings.remove(warning)
+        await call.edit(
+            (
+                self.strings['loadedmod'].format(data) + 
+                "\n" + self.prep_docs(module)
+            ), empty
+        )
+
+    async def decline_load(self, call):        
+        await call.delete()
     
     async def repo_cmd(self, message: types.Message, args: str):
         """Установить репозиторий с модулями. Использование: repo <ссылка на репозиторий или reset>"""
@@ -177,7 +197,8 @@ class LoaderMod(loader.Module):
             ) + "\n" + self.prep_docs(module_name)
         )
 
-    async def dlmod_cmd(self, message: Message, args: str):
+    @loader.command(alias="loadraw")
+    async def dlmod(self, message: Message, args: str):
         if not args:
             return await utils.answer(
                 message,
@@ -186,8 +207,24 @@ class LoaderMod(loader.Module):
         
         try:
             response = await utils.run_sync(requests.get, args)
-            
             module = await self.manager.load_module(response.text, response.url)
+
+            if isinstance(module, tuple):
+                return await self.inline.form(
+                    message=message,
+                    text=f"⚠️ {module[1]}",
+                    reply_markup=[
+                        {
+                            "text": self.strings["accept"],
+                            "callback": self.accept_load,
+                            "args": (response.text, module[1])
+                        },
+                        {
+                            "text": self.strings["decline"],
+                            "callback": self.decline_load
+                        }
+                    ]
+                )
 
             if module is True:
                 return await utils.answer(
@@ -225,48 +262,39 @@ class LoaderMod(loader.Module):
             return await utils.answer(
                 message, self.strings['noreply'])
 
-        _file = await reply.download_media(bytes)
-
+        source = await reply.download_media(bytes)
         try:
-            _file = _file.decode()
+            source = source.decode()
         except UnicodeDecodeError:
             return await utils.answer(
                 message, self.strings['errunicode'])
 
-        modules = [
-            '_example'
-            'config',
-            'eval',
-            'help',
-            'info',
-            'terminal',
-            'tester',
-            'updater'
-        ]
-        
-        for mod in modules:
-            if _file == mod:
-                return await utils.answer(
-                    message,
-                    self.strings['cantload']
-                )
-
-        module_name = await self.manager.load_module(_file)
+        module_name = await self.manager.load_module(source)
         if not module_name:
             return await utils.answer(
                 message, self.strings['noreq'])
         
+        if isinstance(module_name, tuple):
+            return await self.inline.form(
+                message=message,
+                text=f"⚠️ {module_name[1]}",
+                reply_markup=[
+                    {
+                        "text": self.strings["accept"],
+                        "callback": self.accept_load,
+                        "args": (source, module_name[1])
+                    },
+                    {
+                        "text": self.strings["decline"],
+                        "callback": self.decline_load
+                    }
+                ]
+            )
+        
         module = '_'.join(module_name.lower().split())
-
         if module_name is True:
-            with open(f'teagram/modules/{module}.py', 'w', encoding="utf-8") as file:
-                file.write(_file)
-
             return await utils.answer(
                 message, self.strings['downdedreq'])
-        
-        with open(f'teagram/modules/{module}.py', 'w', encoding="utf-8") as file:
-            file.write(_file)
         
         await utils.answer(
             message, (

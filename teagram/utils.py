@@ -723,3 +723,4 @@ def get_distro() -> str:
         return
 
 rand = random_id
+get_named_platform = get_platform

@@ -7,7 +7,6 @@ from typing import Callable
 
 def wrap_function_to_async(function: Callable) -> Callable:
     """Wraps sync function to async"""
-
     assert (not iscoroutinefunction(function)), "Function is async"
     assert (not iscoroutine(function)), "Waiting for function, got coroutine."
 
@@ -15,7 +14,6 @@ def wrap_function_to_async(function: Callable) -> Callable:
 
     @_wraps(function)
     def wrapped(*args, **kwargs):
-
         future = pool.submit(function, *args, **kwargs)
         return wrap_future(future)
 

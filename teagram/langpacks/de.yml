@@ -42,6 +42,8 @@ loader:
   wrongmod: '❌ <b>Sie haben das falsche Modul angegeben</b>'
   replymod: '⚙ <b>Modul <code>{}</code></b>'
   replytoload: '📁 <b>Um ein Modul zu installieren, schreiben Sie <code>{}loadmod</code> als Reply auf diese Nachricht</b>'
+  accept: "✅ Modul laden"
+  decline: "❌ Modul nicht laden"
 
 translator:
   notext: '❌ <b>Kein Text angegeben</b>'

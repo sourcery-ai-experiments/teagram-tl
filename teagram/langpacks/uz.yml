@@ -59,6 +59,8 @@ loader:
   wrongmod: '❌ <b>Noto'g'ri modulni kiritdingiz</b>'
   replymod: '⚙ <b>Modul <code>{}</code></b>'
   replytoload: '📁 <b>Modulni o'rnatish uchun, bu xabarga javob sifatida <code>{}loadmod</code>ni yuboring</b>'
+  accept: "✅ Modulni yuklash"
+  decline: "❌ Modulni yuklamaslik"
 
 translator:
   notext: '❌ <b>Matnni kiritmadingiz</b>'

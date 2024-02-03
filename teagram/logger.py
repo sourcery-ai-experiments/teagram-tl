@@ -17,6 +17,10 @@ class TeagramLogs(logging.StreamHandler):
             for record in self.dump()
         ]
 
+    @logs.setter
+    def logs(self, logs):
+        self.logs = logs
+
     def dump(self):
         """Non-formatted logs"""
         return self.buffer

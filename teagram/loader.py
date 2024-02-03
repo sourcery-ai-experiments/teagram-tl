@@ -105,12 +105,15 @@ class Loop:
 def module(
     name: str,
     author: Union[str, None] = None,
-    version: Union[int, float, None] = None
+    version: Union[int, float, None] = None,
+    warning: Union[str, None] = None
 ) -> FunctionType:
     def decorator(instance: "Module"):
         instance.name = name
         instance.author = author
         instance.version = version
+        instance.warning = warning
+
         return instance
 
     return decorator
@@ -357,6 +360,7 @@ class ModulesManager:
         self._client: TelegramClient = client
         self._db: database.Database = db
         self.me: types.User = me
+        self.warnings: List[str] = []
 
         langpack = utils.get_langpack()
         self.aliases: dict = self._db.get(__name__, "aliases", {})
@@ -408,7 +412,6 @@ class ModulesManager:
                     f"Error loading local module {module_name}: {error}")
 
         await self.send_on_loads()
-
         for custom_module in self._db.get(__name__, "modules", []):
             try:
                 r = await utils.run_sync(requests.get, custom_module)
@@ -417,6 +420,7 @@ class ModulesManager:
                 logger.exception(
                     f"Error loading third party module {custom_module}: {error}")
 
+        self.warnings = []
         return self.bot_manager.bot
     
     def _init(self, value) -> Any:
@@ -506,6 +510,11 @@ class ModulesManager:
                 for module in self.modules:
                     if module.__class__.__name__ == value.__name__:
                         self.unload_module(module, True)
+                
+                warning = value.warning
+                if warning not in self.warnings:
+                    self.warnings.append(warning)
+                    return (value, warning)
 
                 value = self._init(value)
                 instance = self._init_instance(value())
@@ -560,15 +569,15 @@ class ModulesManager:
             return logger.exception(
                 f"Error loading module {origin}: {error}")
 
-        if not instance:
-            return False
+        if isinstance(instance, tuple):
+            return instance
 
         try:
             await self.send_on_load(instance)
         except Exception as error:
             return logger.exception(error)
 
-        return instance.name
+        return getattr(instance, "name", False)
 
     async def send_on_loads(self) -> bool:
         for module in self.modules:
@@ -587,7 +596,6 @@ class ModulesManager:
                 await module.client_ready(*args)
             else:
                 await module.client_ready()
-
             
         except Exception as error:
             return logger.exception(error)
@@ -606,7 +614,7 @@ class ModulesManager:
                 return False
             
             try:
-                asyncio.get_running_loop().create_task(module.on_unload())
+                asyncio.ensure_future(module.on_unload())
             except Exception as error:
                 logger.exception(error)
 
