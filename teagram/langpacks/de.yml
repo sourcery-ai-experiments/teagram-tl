@@ -94,7 +94,7 @@ terminal:
   output: "Output"
 
 Backuper:
-  attemp: '<b>👀 Versuch eines Backups...</b>'
+  attempt: '<b>👀 Versuch eines Backups...</b>'
   done: "<b>✅ Erfolgreiches Backup</b>"
   error: "<b>🚫 Fehler, überprüfen Sie die Logs</b>"
 

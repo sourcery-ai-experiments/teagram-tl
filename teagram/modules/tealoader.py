@@ -197,7 +197,7 @@ class LoaderMod(loader.Module):
             ) + "\n" + self.prep_docs(module_name)
         )
 
-    @loader.command(alias="loadraw")
+    @loader.command(alias="dlm")
     async def dlmod(self, message: Message, args: str):
         if not args:
             return await utils.answer(

@@ -55,7 +55,7 @@ def create_backup(src: str, dest: str, db=False):
         return [str(error), False, zipp]
 
 @loader.module(name="Backuper", author='teagram')
-class BackupMod(loader.Module):
+class BackuperMod(loader.Module):
     """С помощью этого модуля вы сможете делать бекапы модов и всего ЮБ"""
     strings = {'name': 'Backuper'}
 
@@ -122,7 +122,6 @@ class BackupMod(loader.Module):
         )
 
         backup = await create_backup('.', '', True)
-
         if backup[1]:
             await utils.answer(
                 message,

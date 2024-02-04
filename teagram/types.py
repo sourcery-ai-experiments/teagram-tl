@@ -155,7 +155,18 @@ class HikkaValue:
 
 class Config(dict):
     def __init__(self,  *values: list[ConfigValue]):
-        self.config = {config.option: config for config in values}
+        if all(isinstance(value, ConfigValue) for value in values):
+            self.config = {config.option: config for config in values}
+        else:
+            try:
+                keys, defaults, docstrings = values[::3], values[1::3], values[2::3]
+            
+                self._config = {
+                    key: ConfigValue(option=key, default=default, doc=doc)
+                    for key, default, doc in zip(keys, defaults, docstrings)
+                }
+            except Exception:
+                raise
 
         super().__init__(
             {option: config.value for option, config in self.config.items()}

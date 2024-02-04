@@ -124,6 +124,7 @@ class Module:
     name: str
     author: str
     version: Union[int, float]
+    warning: str
 
     async def on_load(self) -> Any:
         ...
@@ -363,6 +364,9 @@ class ModulesManager:
         self.warnings: List[str] = []
 
         langpack = utils.get_langpack()
+        while not langpack: # idk why, but sometimes it returns None
+            langpack = utils.get_langpack()
+
         self.aliases: dict = self._db.get(__name__, "aliases", {})
         self.strings: dict = langpack.get('manager')
         self.translator = translation.Translator(self._db)
@@ -385,13 +389,13 @@ class ModulesManager:
 
     async def load(self, app: TelegramClient) -> bool:
         setattr(app, 'loader', self)
-        
 
         self.dp = dispatcher.DispatcherManager(app, self)
         await self.dp.load()
 
         self.bot_manager = bot.BotManager(app, self._db, self)
         await self.bot_manager.load()
+
         self.inline = self.bot_manager
         self.me.phone = "sup"
         
@@ -577,7 +581,10 @@ class ModulesManager:
         except Exception as error:
             return logger.exception(error)
 
-        return getattr(instance, "name", False)
+        if not isinstance(instance, type):
+            return False
+
+        return getattr(instance, "name", instance.__name__[:-3])
 
     async def send_on_loads(self) -> bool:
         for module in self.modules:

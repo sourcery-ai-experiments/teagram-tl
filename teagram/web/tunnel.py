@@ -71,12 +71,10 @@ class Tunnel:
 
         if url:
             atexit.register(lambda: os.system(
-                'kill $(pgrep -f "ssh -o StrictHostKeyChecking=no -R '
-                f'80:localhost:{self.port} nokey@localhost.run")'
+                    'kill $(pgrep -f "ssh -o StrictHostKeyChecking=no -R '
+                    f'80:localhost:{self.port} nokey@localhost.run")'
                 )
             )
-            self.logger.info(url) # most hosts do not show the latest output
+            self.logger.info(url)
         else:
             self.logger.info(f'http://localhost:{self.port}')
-            
-        self.logger.info("Login in account")
