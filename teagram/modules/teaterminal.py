@@ -48,8 +48,8 @@ class TerminalMod(loader.Module):
         await utils.answer(
             message,
             "<emoji document_id=5472111548572900003>⌨️</emoji>"
-            f"<b> {self.strings['cmd']}:</b> <code>{args}</code>\n"
-            f"💾 <b>{self.strings['output']}:</b>\n<code>"
+            f"<b> {self.strings['cmd']}:</b> <pre language='bash'>{args}</pre>\n"
+            f"💾 <b>{self.strings['output']}:</b>\n<pre language='bash'>"
             f"{output}"
-            "</code>"
+            "</pre>"
         )
