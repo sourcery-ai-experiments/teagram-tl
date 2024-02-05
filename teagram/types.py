@@ -158,15 +158,12 @@ class Config(dict):
         if all(isinstance(value, ConfigValue) for value in values):
             self.config = {config.option: config for config in values}
         else:
-            try:
-                keys, defaults, docstrings = values[::3], values[1::3], values[2::3]
-            
-                self._config = {
-                    key: ConfigValue(option=key, default=default, doc=doc)
-                    for key, default, doc in zip(keys, defaults, docstrings)
-                }
-            except Exception:
-                raise
+            keys, defaults, docstrings = values[::3], values[1::3], values[2::3]
+        
+            self.config = {
+                key: ConfigValue(option=key, default=default, doc=doc)
+                for key, default, doc in zip(keys, defaults, docstrings)
+            }
 
         super().__init__(
             {option: config.value for option, config in self.config.items()}

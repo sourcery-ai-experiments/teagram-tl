@@ -56,7 +56,6 @@ class EvalMod(loader.Module):
                 'telethon': __import__('telethon'),
                 'message': message,
                 'reply': await message.get_reply_message(),
-                'r': await message.get_reply_message(),
                 'args': args,
                 'me': self.manager.me
             }
@@ -71,7 +70,7 @@ class EvalMod(loader.Module):
         await utils.answer(
             message,
             "<b>🐍 Code</b>:\n"
-            f"<pre language='python'>{args}</pre>\n"
+            f"<code>{args}</code>\n"
             "<b>💻 Output</b>:\n"
-            f"<pre language='python'>{utils.escape_html(result)}</pre>"
+            f"<code>{utils.escape_html(result)}</code>"
         )

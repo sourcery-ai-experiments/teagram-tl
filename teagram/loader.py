@@ -185,7 +185,6 @@ def get_command_handlers(instance: Module) -> Dict[str, FunctionType]:
                 
     return command_handlers
 
-
 def get_watcher_handlers(instance: 'Module') -> List[FunctionType]:
     return [
         method for method in dir(instance)
@@ -328,10 +327,9 @@ def on_bot(custom_filters: LambdaType) -> FunctionType:
 
     return decorator
 
-# non functional, for hikka
-def tds(cls):
+def tds(cls: type):
+    cls.name = cls.__name__[:-3]
     return cls
-
 
 # hikka support
 ModuleConfig = ttypes.Config
@@ -516,7 +514,7 @@ class ModulesManager:
                         self.unload_module(module, True)
                 
                 warning = value.warning
-                if warning not in self.warnings:
+                if warning not in self.warnings and warning:
                     self.warnings.append(warning)
                     return (value, warning)
 
@@ -581,10 +579,7 @@ class ModulesManager:
         except Exception as error:
             return logger.exception(error)
 
-        if not isinstance(instance, type):
-            return False
-
-        return getattr(instance, "name", instance.__name__[:-3])
+        return instance.name
 
     async def send_on_loads(self) -> bool:
         for module in self.modules:

@@ -42,8 +42,7 @@ class HelpMod(loader.Module):
                 self.manager.modules, 
                 key=lambda mod: len(mod.command_handlers) + len(mod.inline_handlers)
             ):
-                if module.name.lower() == 'help' or \
-                    module.name.lower() not in self.manager.core_modules:
+                if module.name.lower() == "help":
                     continue
 
                 commands = " <b>|</b> ".join(

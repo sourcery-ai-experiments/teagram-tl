@@ -89,14 +89,10 @@ class InfoMod(loader.Module):
         avatar = self.config.get('customImage')
         davatar = 'https://raw.githubusercontent.com/MuRuLOSE/teagram-assets/main/teagram_banner2v1.png'
 
-        await self.inline.form(
-            message=message,
-            text=(await self.text()),
-            photo=avatar or davatar,
-            reply_markup=[
-                {"text": "🤝 Support chat", 
-                 "url": "https://t.me/UBteagram"},
-                {"text": "🐙 Github", 
-                 "url": "https://github.com/itzlayz/teagram-tl"}
-            ]
+        text = await self.text()
+        await utils.answer(
+            message,
+            photo=True,
+            response=avatar or davatar,
+            caption=text
         )
