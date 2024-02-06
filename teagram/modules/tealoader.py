@@ -387,26 +387,6 @@ class LoaderMod(loader.Module):
             +self.strings['replytoload'].format(self.prefix[0])
         )
 
-    @loader.command(alias="ch_branch")
-    async def chbranch(self, message: types.Message, version: str):
-        try:
-            import git
-        except Exception as error:
-            return await utils.answer(message, f"GIT: `{error}`")
-        
-        repo = git.Repo().git
-
-        versions = repo.remote().refs
-        if version not in versions:
-            return await utils.answer(
-                message, "Invalid version: \n" + (
-                    ", ".join(versions)
-                )
-            )
-            
-        repo.checkout("HEAD", b=version)
-        # await self.restart_cmd(message)
-
     async def restart_cmd(self, message: types.Message):
         """Перезагрузка юзербота"""
         def restart() -> None:

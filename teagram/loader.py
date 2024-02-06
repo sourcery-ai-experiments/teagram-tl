@@ -328,7 +328,6 @@ def on_bot(custom_filters: LambdaType) -> FunctionType:
     return decorator
 
 def tds(cls: type):
-    cls.name = cls.__name__[:-3]
     return cls
 
 # hikka support
@@ -538,18 +537,33 @@ class ModulesManager:
             spec = ModuleSpec(module_name, StringLoader(
                 module_source, origin), origin=origin)
             instance = self.register_instance(module_name, spec=spec)
-        except ImportError:
+        except (ImportError, ModuleNotFoundError):
             if did_requirements:
                 return True
             try:
-                requirements = re.findall(r"# required:\s+([\w-]+(?:\s+[\w-]+)*)", module_source)
+                requirements = re.findall(
+                    r"#\srequired:\s+([\w-]+(?:\s+[\w-]+)*)", 
+                    module_source
+                )
+                if not requirements:
+                    requirements = []
+                    imports = re.findall(
+                        r'^import\s+[\w\d_]+(?!\s*from\s+[\w\d_]+\s*import)',
+                        module_source, re.MULTILINE
+                    )
+                    
+                    for _import in imports:
+                        _import = _import.split()[-1]
+                        try:
+                            __import__(_import)
+                        except ImportError:
+                            requirements.append(_import)
+                    
+                    requirements = " ".join(requirements)
+                    if not requirements:
+                        raise TypeError("Installation packages not specified")
             except TypeError:
-                logger.error(traceback.format_exc())
-                return logger.warning("Installation packages not specified")
-            
-            if not requirements:
-                logger.error(traceback.format_exc())
-                return logger.warning("Installation packages not specified")
+                return logger.exception("")
 
             logger.info(f"Installing packages: {', '.join(requirements)}...")
             try:
