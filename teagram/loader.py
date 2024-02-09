@@ -136,12 +136,12 @@ class Module:
     async def client_ready(self, client, db):
         ...
 
-    def get(self, key: str, _: Any = None) -> Any:
+    def get(self, key: str, default: Any = None) -> Any:
         db = getattr(self, 'db', {}) # we can't get db now
         
         return db.get(
             self.__class__.__name__,
-            key, _
+            key, default
         )
 
     def set(self, key: str, value: Any) -> None:

@@ -21,31 +21,52 @@ from typing import (
 from telethon import TelegramClient, types
 from telethon.tl.custom import Message as TeleMessage
 
-from . import database, bot
-from  dataclasses import dataclass, field
-from .validators import Integer, String, Boolean, ValidationError, Validator
+from . import database, bot, dispatcher
+from .translation import Translator
+from .validators import (
+    Integer, 
+    String, 
+    Boolean, 
+    ValidationError, 
+    Validator
+)
 
 from ast import literal_eval
+from  dataclasses import dataclass, field
 
 class Module:
-    """Module's descripton"""
     name: str
     author: str
     version: Union[int, float]
+    warning: str
 
     async def on_load(self) -> Any:
-        """Invokes on module load"""
+        ...
     
     async def on_unload(self) -> Any:
-        """Invokes on module unload"""
+        ...
+
+    async def client_ready(self, client, db):
+        ...
+
+    def get(self, key: str, default: Any = None) -> Any:
+        ...
+
+    def set(self, key: str, value: Any) -> None:
+        ...
 
 
 class ModulesManager:
     """Manager of modules"""
 
-    def __init__(self) -> None:
-        self.modules: List[Module] 
-        self.watcher_handlers: List[FunctionType] 
+    def __init__(
+        self,
+        client: TelegramClient,
+        db: database.Database,
+        me: types.User
+    ) -> None:
+        self.modules: List[Module]
+        self.watcher_handlers: List[FunctionType]
 
         self.command_handlers: Dict[str, FunctionType] 
         self.message_handlers: Dict[str, FunctionType] 
@@ -53,20 +74,21 @@ class ModulesManager:
         self.callback_handlers: Dict[str, FunctionType] 
         self.loops: List[FunctionType]
 
-        self._local_modules_path: str
+        self._local_modules_path: str = "./teagram/modules"
 
         self._client: TelegramClient
         self._db: database.Database
         self.me: types.User
+        self.warnings: List[str]
 
-        self.aliases: dict 
-        self.strings: dict 
-        self.translator
-        self.core_modules: list
+        self.aliases: dict
+        self.strings: dict
+        self.translator: Translator
+        self.core_modules: List[str]
 
-        self.dp
+        self.dp: dispatcher.DispatcherManager
         self.bot_manager: bot.BotManager
-        self.inline: bot.BotManager # same as bot_manager
+        self.inline: bot.BotManager
 
 class WaitForDefault:
     pass
@@ -155,7 +177,7 @@ class HikkaValue:
 
 class Config(dict):
     def __init__(self,  *values: list[ConfigValue]):
-        if all(isinstance(value, ConfigValue) for value in values):
+        if all(isinstance(value, (ConfigValue)) for value in values):
             self.config = {config.option: config for config in values}
         else:
             keys, defaults, docstrings = values[::3], values[1::3], values[2::3]
