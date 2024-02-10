@@ -180,7 +180,7 @@ class Choice(Validator):
         if value not in possible_values:
             raise ValidationError(
                 f"Can't validate value ({value}), possible values:"
-                f" {' | '.join(list(map(str, possible_values)))}"
+                f" {' | '.join(map(str, possible_values))}"
             )
 
         return value
@@ -203,3 +203,18 @@ class Hidden(Validator):
     @staticmethod
     def _valid(value: ALLOWED_TYPES, /, *, validator: Validator):
         return validator._valid(value)
+
+class NoneType(Validator):
+    def __init__(self):
+        super().__init__(
+            partial(
+                self._validate
+            )
+        )
+
+    @staticmethod
+    def _validate(value: ALLOWED_TYPES, /) -> None:
+        if not value:
+            raise ValidationError("Passed value must be Nonetype")
+
+        return None
