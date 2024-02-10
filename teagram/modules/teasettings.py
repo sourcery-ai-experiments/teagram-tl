@@ -271,9 +271,32 @@ class SettingsMod(loader.Module):
               if _users else self.strings['nouser']
         )
 
-    @loader.command()
-    async def ch_token(self, message: types.Message):
+    @loader.command(alias="ch_token")
+    async def inlinetoken(self, message: types.Message):
         self.db.set('teagram.bot', 'token', None)
         await utils.answer(
             message, self.strings['chbot'].format(f"{self.prefix}restart")
+        )
+
+    @loader.command(alias="ch_name")
+    async def inlinename(self, message, args: str = None):
+        if not args:
+            return await utils.answer(
+                message, 
+                self.strings("noargs")
+            )
+        
+        async with self.client.conversation("@BotFather") as conv:
+            await conv.send_message("/setname")
+            await conv.send_message(f"@{self.inline.bot_username}")
+            await conv.send_message(args)
+
+            await conv.mark_read()
+
+        self.inline.bot_username = args
+        await utils.answer(
+            message,
+            self.strings("iname_ch").format(
+                last=self.inline.bot_username, cur=args
+            )
         )

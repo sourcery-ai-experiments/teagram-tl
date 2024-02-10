@@ -135,6 +135,7 @@ class BotManager(Events, TokenManager):
 
         asyncio.ensure_future(self._dp.start_polling())
 
+        self.bot_username = self.me.username
         self.bot.manager = self
         return True
 

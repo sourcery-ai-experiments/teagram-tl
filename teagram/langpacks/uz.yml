@@ -130,6 +130,9 @@ settings:
   nouser: "<b>❔ Foydalanuvchilar topilmadi</b>"
   user: "<b>Foydalanuvchilar:</b>"
   chbot: "<b>✔ Siz muvaffaqiyatli inline botni o'zgartirdingiz!\nO'zgartirish uchun qayta ishlang (<code>{}</code>)</b>"
+  iname_ch: "<b>Siz muvaffaqiyatli <code>{cur}</code> bot nomini <code>{last}</code> dan <code>{cur}</code> ga o'zgartirdingiz</b>"
+  noargs: "❌ <b>Argumentlar mavjud emas</b>"
+
 
 dump:
   dumped: "Dump yaratildi"

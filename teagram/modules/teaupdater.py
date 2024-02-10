@@ -105,7 +105,7 @@ class UpdateMod(loader.Module):
             return
 
         bot: Bot = self.inline.bot
-        me = await self.manager.me
+        me = self.manager.me
 
         try:
             _me = await bot.get_me()
@@ -163,7 +163,9 @@ class UpdateMod(loader.Module):
                 try:
                     run(
                         [
-                            "pip3",
+                            sys.executable,
+                            "-m",
+                            "pip",
                             "install",
                             "--upgrade",
                             "--disable-pip-version-check",

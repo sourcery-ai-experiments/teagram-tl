@@ -129,6 +129,8 @@ settings:
   nouser: "<b>❔ Benutzer nicht gefunden</b>"
   user: "<b>Benutzer:</b>"
   chbot: "<b>✔ Du hast den Inline-Bot erfolgreich geändert!\nBitte starte den Bot neu, um die Änderungen zu übernehmen (<code>{}</code>)</b>"
+  iname_ch: "<b>Sie haben erfolgreich den Namen des Bots von <code>{last}</code> auf <code>{cur}</code> geändert</b>"
+  noargs: "❌ <b>Keine Argumente</b>"
 
 dump:
   dumped: "Dump erstellt"

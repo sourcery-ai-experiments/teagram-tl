@@ -469,6 +469,7 @@ class ModulesManager:
         instance.strings = translation.Strings(
             instance, self.translator)
         instance.translator = self.translator
+        instance = self.update_config(instance)
 
         self.modules.append(instance)
         self.command_handlers.update(instance.command_handlers)
@@ -493,6 +494,19 @@ class ModulesManager:
     def get_prefix(self) -> list:
         """Returns prefix"""
         return self._db.get('teagram.loader', 'prefixes', ['.'])
+
+    def update_config(self, instance):
+        config = getattr(instance, "config", None)
+        if config:
+            for k, v in config.items():
+                value = instance.get(k, config.config[k].default)
+
+                config[k] = value
+                config.config[k].value = value
+
+            instance.config = config
+
+        return instance
 
     def register_instance(
         self,
