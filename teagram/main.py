@@ -24,7 +24,7 @@ import logging
 logger = logging.getLogger()
 
 teagram = sys.modules['teagram']
-teagram.inline = teagram.bot # alias
+sys.modules['teagram.inline'] = teagram.bot
 
 class TeagramStreamHandler(logging.StreamHandler):
     def __init__(self, *args, **kwargs):
