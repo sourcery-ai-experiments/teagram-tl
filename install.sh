@@ -8,14 +8,6 @@ else
     SUDOCMD=""
 fi
 
-echo -e "                                  
-\033[0;36m_____\033[0m                           
-\033[0;36m|_   _|___ ___ \033[0m___ ___ ___ _____ 
-\033[0;36m  | | | -_| .'\033[0m| . |  _| .'|     |
-\033[0;36m  |_| |___|__,\033[0m|_  |_| |__,|_|_|_|
-\033[0;36m              \033[0m|___|              
-"
-
 LOG_FILE="install.log"
 echo "[INFO] Starting installation" > "$LOG_FILE"
 echo "[DEBUG] SUDOCMD: $SUDOCMD" >> "$LOG_FILE"
@@ -25,21 +17,28 @@ if [[ "$teagram" == "reset" ]]; then
     eval "$SUDOCMD apt purge -y python3"
 fi
 
-if command -v python3.11 &>/dev/null; then
-    PYTHON="python3.11"
-elif command -v python3.10 &>/dev/null; then
-    PYTHON="python3.10"
-elif command -v python3.9 &>/dev/null; then
-    PYTHON="python3.9"
-elif command -v python3 &>/dev/null; then
-    PYTHON="python3"
-else
+PYTHON=""
+for ver in python3.11 python3.10 python3.9 python3; do
+    if command -v "$ver" &>/dev/null; then
+        PYTHON="$ver"
+        break
+    fi
+done
+
+if [ -z "$PYTHON" ]; then
     echo "[INFO] Installing 4 packages..." >> "$LOG_FILE"
     echo "[INFO] Installing packages..."
     eval "$SUDOCMD $PKGINSTALL git openssl python3"
+else
+    ver=$(echo "$($PYTHON --version 2>&1 | awk '{print $2}' | cut -d. -f1,2)" | tr -d '.')
+    if [[ -z "$ver" || "$ver" -lt "309" ]]; then
+        echo "[ERROR] Your python version must be higher than 3.9" >> "$LOG_FILE"
+        echo "[ERROR] Your python version must be higher than 3.9"
+        exit 1
+    fi
+
 fi
 
-echo "[INFO] Using Python: $PYTHON" >> "$LOG_FILE"
 if [[ "$OSTYPE" == *linux-gnu* ]]; then
     echo "[INFO] Found OS type: GNU/Linux ($OSTYPE)" >> "$LOG_FILE"
     PKGINSTALL="apt install -y"
@@ -76,15 +75,18 @@ if ! command -v curl &>/dev/null; then
     exit 1
 fi
 
-echo "[INFO] Installing get-pip.py" >> "$LOG_FILE"
-echo "[INFO] Installing python3-pip"
+if ! command -v $PYTHON -m pip &>/dev/null; then
+    echo "[INFO] Installing get-pip.py" >> "$LOG_FILE"
+    echo "[INFO] Installing python3-pip"
 
-curl https://bootstrap.pypa.io/get-pip.py -o teagram_get_pip.py
-$PYTHON teagram_get_pip.py
-$SUDOCMD rm teagram_get_pip.py
+    $SUDOCMD curl https://bootstrap.pypa.io/get-pip.py -o __get_pip.py
+    
+    $PYTHON __get_pip.py
+    $SUDOCMD __get_pip.py
+fi
 
 read -p "Do you want to update packages? (Y/n): " update_choice
-if [[ "$update_choice" == "y" ]]; then
+if [[ "${update_choice,,}" == "y" ]]; then
     echo "[INFO] Updating and upgrading all packages..." >> "$LOG_FILE"
     echo "[INFO] Updating..."
     eval "$SUDOCMD $UPD"
