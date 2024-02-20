@@ -4,46 +4,17 @@ from ..types import Config, ConfigValue
 
 import telethon
 import platform
-
 import logging
 import atexit
 import json
-
 from git import Repo
 
 PATH = f"{BASE_PATH}/dump.json"
 REPO = Repo(BASE_DIR)
 
-data = {}
-dump = False
 logger = logging.getLogger()
 
 
-def get_token():
-    with open(BASE_PATH / "db.json", "r") as file:
-        json_data = json.load(file)
-    try:
-        if json_data["teagram.bot"]["token"]:
-            return True
-    except KeyError:
-        return False
-
-
-def get_git_info(commit: bool = False, url: bool = False, branch: bool = False):
-    repo = REPO
-
-    if commit:
-        return repo.commit()
-
-    if url:
-        origin = repo.remotes.origin
-        return origin.url
-
-    if branch:
-        return repo.active_branch.name
-
-
-@loader.module(name="Dump", author="teagram")
 class DumpMod(loader.Module):
     """Makes dump with information"""
 
@@ -60,19 +31,31 @@ class DumpMod(loader.Module):
             )
         )
 
-    def gen(self) -> dict:
-        ver = ""
+    def get_token(self):
+        try:
+            with open(BASE_PATH / "db.json", "r") as file:
+                json_data = json.load(file)
+                return bool(json_data.get("teagram.bot", {}).get("token"))
+        except FileNotFoundError:
+            return False
 
-        if "windows" in platform.platform():
-            ver = platform.platform()
-        else:
-            try:
-                ver = get_distro()
-            except FileNotFoundError:
-                pass
+    def get_git_info(
+        self, commit: bool = False, url: bool = False, branch: bool = False
+    ):
+        repo = REPO
+
+        if commit:
+            return repo.commit()
+        elif url:
+            return repo.remotes.origin.url
+        elif branch:
+            return repo.active_branch.name
+
+    def gen(self) -> dict:
+        ver = platform.platform() if "windows" in platform.platform() else get_distro()
         try:
             return {
-                "teagram.token": {"token": get_token()},
+                "teagram.token": {"token": self.get_token()},
                 "teagram.modules": {
                     "modules": [mod.name for mod in self.manager.modules]
                 },
@@ -82,9 +65,9 @@ class DumpMod(loader.Module):
                 },
                 "teagram.platform": {"platform": utils.get_platform(), "os": ver},
                 "teagram.git": {
-                    "url": get_git_info(url=True),
-                    "commit": str(get_git_info(commit=True)),
-                    "branch": str(get_git_info(branch=True)),
+                    "url": self.get_git_info(url=True),
+                    "commit": str(self.get_git_info(commit=True)),
+                    "branch": str(self.get_git_info(branch=True)),
                 },
             }
         except TypeError:
