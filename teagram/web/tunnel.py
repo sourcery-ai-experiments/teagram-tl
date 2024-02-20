@@ -5,7 +5,7 @@
 #                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
 #                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
 #                                            https://t.me/itzlayz
-#                           
+#
 #                                    🔒 Licensed under the GNU AGPLv3
 #                                 https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -16,6 +16,7 @@ import re
 import atexit
 import asyncio
 import logging
+
 
 class Tunnel:
     def __init__(self, logger: logging.Logger, port: int, event: asyncio.Event):
@@ -38,7 +39,7 @@ class Tunnel:
         self.logger.info("Processing...")
 
         url = None
-        if 'windows' not in get_platform().lower():
+        if "windows" not in get_platform().lower():
             self.stream = await asyncio.create_subprocess_shell(
                 "ssh -o StrictHostKeyChecking=no -R "
                 f"80:localhost:{self.port} nokey@localhost.run",
@@ -46,18 +47,18 @@ class Tunnel:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            
-            url = ''
+
+            url = ""
 
             async def gettext():
                 for line in iter(self.stream.stdout.readline, ""):
                     line = (await line).decode()
                     await asyncio.sleep(0.3)
 
-                    if (ur := re.search(r"tunneled.*?(https:\/\/.+)", line)):
+                    if ur := re.search(r"tunneled.*?(https:\/\/.+)", line):
                         nonlocal url
                         url = ur[1]
-                        
+
                         if not self.ev.is_set():
                             self.ev.set()
 
@@ -70,11 +71,12 @@ class Tunnel:
             self.logger.info("Proxy isn't working on windows, please use WSL")
 
         if url:
-            atexit.register(lambda: os.system(
+            atexit.register(
+                lambda: os.system(
                     'kill $(pgrep -f "ssh -o StrictHostKeyChecking=no -R '
                     f'80:localhost:{self.port} nokey@localhost.run")'
                 )
             )
             self.logger.info(url)
         else:
-            self.logger.info(f'http://localhost:{self.port}')
+            self.logger.info(f"http://localhost:{self.port}")

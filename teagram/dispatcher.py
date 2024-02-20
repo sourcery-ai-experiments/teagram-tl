@@ -5,7 +5,7 @@
 #                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
 #                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
 #                                            https://t.me/itzlayz
-#                           
+#
 #                                    🔒 Licensed under the GNU AGPLv3
 #                                 https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -22,6 +22,7 @@ from . import loader, utils
 
 import traceback
 
+
 class DispatcherManager:
     """Dispatcher's manager"""
 
@@ -33,9 +34,9 @@ class DispatcherManager:
         self,
         func: FunctionType,
         message: Union[types.Message, Message],
-        watcher: bool = False
+        watcher: bool = False,
     ) -> bool:
-        if (custom_filters := getattr(func, "_filters", None)):
+        if custom_filters := getattr(func, "_filters", None):
             coro = custom_filters(message)
             if iscoroutine(coro):
                 coro = await coro
@@ -43,25 +44,19 @@ class DispatcherManager:
             if not coro:
                 return False
         else:
-            _users = self.manager._db.get('teagram.loader', 'users', [])
-            
+            _users = self.manager._db.get("teagram.loader", "users", [])
+
             if not message.out and message.sender_id not in _users and not watcher:
                 return False
 
         return True
 
     async def load(self) -> bool:
-        self.app.add_event_handler(
-            self._handle_message,
-            NewMessage
-        )
-        self.app.add_event_handler(
-            self._handle_message,
-            MessageEdited
-        )
+        self.app.add_event_handler(self._handle_message, NewMessage)
+        self.app.add_event_handler(self._handle_message, MessageEdited)
         return True
 
-    async def _handle_message(self, message: types.Message) -> types.Message:    
+    async def _handle_message(self, message: types.Message) -> types.Message:
         await self._handle_watchers(message)
 
         prefix, command, args = utils.get_full_command(message)
@@ -77,10 +72,7 @@ class DispatcherManager:
             return
 
         try:
-            if (
-                len(vars_ := getfullargspec(func).args) > 2
-                and vars_[2] == "args"
-            ):
+            if len(vars_ := getfullargspec(func).args) > 2 and vars_[2] == "args":
                 await func(message, utils.get_full_command(message)[2])
             else:
                 await func(message)
@@ -89,9 +81,7 @@ class DispatcherManager:
 
             logging.exception(error)
             await utils.answer(
-                message,
-                self.manager.strings['errorcmd'].format(
-                    message.text, error)
+                message, self.manager.strings["errorcmd"].format(message.text, error)
             )
 
         return message

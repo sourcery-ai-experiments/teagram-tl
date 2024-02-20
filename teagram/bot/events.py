@@ -2,18 +2,30 @@ import logging
 import inspect
 import traceback
 from aiogram.types import (
-    CallbackQuery, Message, InlineQuery, InlineQueryResultArticle, InlineQueryResultGif,
-    InputTextMessageContent, InlineQueryResultPhoto, InlineQueryResultDocument,
-    InputMediaPhoto, InputMediaAnimation, InputMediaDocument, ChosenInlineResult,
-    InputFile)
+    CallbackQuery,
+    Message,
+    InlineQuery,
+    InlineQueryResultArticle,
+    InlineQueryResultGif,
+    InputTextMessageContent,
+    InlineQueryResultPhoto,
+    InlineQueryResultDocument,
+    InputMediaPhoto,
+    InputMediaAnimation,
+    InputMediaDocument,
+    ChosenInlineResult,
+    InputFile,
+)
 from .types import Item, InlineCall
 from .. import utils
+
 
 class Events(Item):
     """
     Event handler class.
     Handles various event types such as messages, callback queries, and inline queries.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -32,19 +44,19 @@ class Events(Item):
         Returns:
             Message: The processed message.
         """
-        if message.text == '/start':
+        if message.text == "/start":
             return await message.reply_photo(
-                photo=InputFile('assets/teagram_banner.png'),
-                caption=self._manager.strings['inline_hello'],
+                photo=InputFile("assets/teagram_banner.png"),
+                caption=self._manager.strings["inline_hello"],
                 reply_markup=self._generate_markup(
                     [
                         {
                             "text": "🐙 Github",
-                            "url": "https://github.com/itzlayz/teagram-tl"
+                            "url": "https://github.com/itzlayz/teagram-tl",
                         }
                     ]
                 ),
-                parse_mode='html'
+                parse_mode="html",
             )
 
         for func in self._manager.message_handlers.values():
@@ -71,12 +83,12 @@ class Events(Item):
             CallbackQuery: The processed callback query.
         """
         if call.from_user.id != self._manager.me.id:
-           return
+            return
 
         call = InlineCall(call, self)
         try:
-            if (func := self._units[call.data]):
-                if func.get('callback'):
+            if func := self._units[call.data]:
+                if func.get("callback"):
                     try:
                         await func.callback(call)
                     except Exception as error:
@@ -85,7 +97,7 @@ class Events(Item):
             pass
 
         try:
-            if (func := self._manager.callback_handlers[call.data]):
+            if func := self._manager.callback_handlers[call.data]:
                 args = self.callback_units[call.data]
                 try:
                     if args:
@@ -93,9 +105,7 @@ class Events(Item):
                             await func(call, *args)
                         else:
                             await func(call, args)
-                    elif len(inspect.getfullargspec(
-                            func
-                        ).args) == 2:
+                    elif len(inspect.getfullargspec(func).args) == 2:
                         await func(call)
                 except Exception as error:
                     logging.exception(error)
@@ -112,11 +122,9 @@ class Events(Item):
                     continue
 
                 try:
-                    if len(inspect.getfullargspec(func).args) == 2: 
+                    if len(inspect.getfullargspec(func).args) == 2:
                         await func(call)
-                    elif (
-                            args := self.callback_units.get(key, ())
-                        ):
+                    elif args := self.callback_units.get(key, ()):
                         await func(call, args)
                 except AttributeError:
                     pass
@@ -150,7 +158,7 @@ class Events(Item):
         if func:
             if not await self._check_filters(func, func.__self__, inline_query):
                 return
-            
+
         if not query_:
             commands = ""
             for command, func in self._manager.inline_handlers.items():
@@ -159,8 +167,7 @@ class Events(Item):
                         commands += f"\n💬 <code>@{self.bot_username} {command}</code>"
 
             message = InputTextMessageContent(
-                f"👇 <b>Available Commands</b>\n"
-                f"{commands}"
+                f"👇 <b>Available Commands</b>\n" f"{commands}"
             )
 
             return await inline_query.answer(
@@ -168,74 +175,71 @@ class Events(Item):
                     InlineQueryResultArticle(
                         id=utils.random_id(),
                         title="Available Commands",
-                        input_message_content=message
+                        input_message_content=message,
                     )
-                ], cache_time=0
+                ],
+                cache_time=0,
             )
 
         try:
             form = self._units[query]
-            text = form.get('text')
+            text = form.get("text")
             keyboard = None
-            
-            if isinstance(form['keyboard'], list):
-                keyboard = self._generate_markup(form['keyboard'])
-            elif isinstance(form['reply_markup'], list):
-                keyboard = self._generate_markup(form['reply_markup'])
-                
-            if form['photo']:
+
+            if isinstance(form["keyboard"], list):
+                keyboard = self._generate_markup(form["keyboard"])
+            elif isinstance(form["reply_markup"], list):
+                keyboard = self._generate_markup(form["reply_markup"])
+
+            if form["photo"]:
                 await inline_query.answer(
                     [
                         InlineQueryResultPhoto(
                             id=utils.random_id(),
-                            title=form.get('title'),
-                            description=form.get('description'),
+                            title=form.get("title"),
+                            description=form.get("description"),
                             input_message_content=InputMediaPhoto(
-                                form['photo'],
-                                form.get('caption', text),
-                                'HTML'
+                                form["photo"], form.get("caption", text), "HTML"
                             ),
-                            caption=form.get('caption', text),
+                            caption=form.get("caption", text),
                             reply_markup=keyboard,
-                            photo_url=form['photo'],
-                            thumb_url=form['photo']
+                            photo_url=form["photo"],
+                            thumb_url=form["photo"],
                         )
                     ]
                 )
-            elif form['gif']:
+            elif form["gif"]:
                 await inline_query.answer(
                     [
                         InlineQueryResultGif(
                             id=utils.random_id(20),
                             title=form.get("title"),
-                            caption=form.get('caption', text),
+                            caption=form.get("caption", text),
                             parse_mode="HTML",
                             thumb_url=form.get("thumb", form["gif"]),
                             gif_url=form["gif"],
                             reply_markup=keyboard,
                             input_message_content=InputMediaAnimation(
-                                form['gif'],
-                                form.get('caption', text),
-                                'HTML'
+                                form["gif"], form.get("caption", text), "HTML"
                             ),
                         ),
                     ]
                 )
-            elif form['doc']:
+            elif form["doc"]:
                 await inline_query.answer(
                     [
                         InlineQueryResultDocument(
                             id=utils.random_id(),
-                            title=form.get('title'),
-                            description=form.get('description'),
+                            title=form.get("title"),
+                            description=form.get("description"),
                             input_message_content=InputMediaDocument(
-                                form['doc'],
-                                caption=form.get('caption', text),
-                                parse_mode='HTML'
+                                form["doc"],
+                                caption=form.get("caption", text),
+                                parse_mode="HTML",
                             ),
                             reply_markup=keyboard,
-                            document_url=form['doc'],
-                            caption=form.get('caption', text)
+                            document_url=form["doc"],
+                            caption=form.get("caption", text),
                         )
                     ]
                 )
@@ -244,14 +248,12 @@ class Events(Item):
                     [
                         InlineQueryResultArticle(
                             id=utils.random_id(),
-                            title=form.get('title'),
-                            description=form.get('description'),
+                            title=form.get("title"),
+                            description=form.get("description"),
                             input_message_content=InputTextMessageContent(
-                                text,
-                                parse_mode='HTML',
-                                disable_web_page_preview=True
+                                text, parse_mode="HTML", disable_web_page_preview=True
                             ),
-                            reply_markup=keyboard
+                            reply_markup=keyboard,
                         )
                     ]
                 )
@@ -260,7 +262,7 @@ class Events(Item):
             pass
         except Exception:
             traceback.print_exc()
-        
+
         if not func:
             return await inline_query.answer(
                 [
@@ -268,9 +270,11 @@ class Events(Item):
                         id=utils.random_id(),
                         title="Error",
                         input_message_content=InputTextMessageContent(
-                            "❌ <b>No such inline command</b>")
+                            "❌ <b>No such inline command</b>"
+                        ),
                     )
-                ], cache_time=0
+                ],
+                cache_time=0,
             )
 
         possible = None
@@ -288,8 +292,7 @@ class Events(Item):
         if isinstance(possible, (list, tuple, dict)):
             try:
                 return await inline_query.answer(
-                    self._gen_inline_query(possible),
-                    cache_time=30
+                    self._gen_inline_query(possible), cache_time=30
                 )
             except Exception as error:
                 logging.exception(error)
@@ -298,14 +301,13 @@ class Events(Item):
 
     async def _chosen_inline_handler(self, chosen_inline_query: ChosenInlineResult):
         query = chosen_inline_query.query
-        
-        if (input_handler := self.input_handlers.get(query, '')):
+
+        if input_handler := self.input_handlers.get(query, ""):
             try:
-                await input_handler['handler'](
+                await input_handler["handler"](
                     InlineCall(chosen_inline_query, self),
                     query,
-                    *input_handler.get("args", [])
+                    *input_handler.get("args", []),
                 )
             except Exception:
                 logging.exception("Chosen inline handler error")
-                

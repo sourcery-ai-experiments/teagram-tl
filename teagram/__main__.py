@@ -11,15 +11,11 @@ from .logger import init_logging
 from contextlib import suppress
 
 parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--disable-web",
-    action="store_true",
-    help="Disable auth with web"
-)
+parser.add_argument("--disable-web", action="store_true", help="Disable auth with web")
 
 if __name__ == "__main__":
     init_logging()
-    
+
     with suppress(KeyboardInterrupt):
         args = parser.parse_args()
         main = Main(args).main

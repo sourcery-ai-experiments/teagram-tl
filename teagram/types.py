@@ -5,34 +5,23 @@
 #                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
 #                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
 #                                            https://t.me/itzlayz
-#                           
+#
 #                                    🔒 Licensed under the GNU AGPLv3
 #                                 https://www.gnu.org/licenses/agpl-3.0.html
 
 from types import FunctionType
-from typing import (
-    Any, 
-    Dict, 
-    List, 
-    Union, 
-    Callable
-)
+from typing import Any, Dict, List, Union, Callable
 
 from telethon import TelegramClient, types
 from telethon.tl.custom import Message as TeleMessage
 
 from . import database, bot, dispatcher
 from .translation import Translator
-from .validators import (
-    Integer, 
-    String, 
-    Boolean, 
-    ValidationError, 
-    Validator
-)
+from .validators import Integer, String, Boolean, ValidationError, Validator
 
 from ast import literal_eval
-from  dataclasses import dataclass, field
+from dataclasses import dataclass, field
+
 
 class Module:
     name: str
@@ -40,38 +29,30 @@ class Module:
     version: Union[int, float]
     warning: str
 
-    async def on_load(self) -> Any:
-        ...
-    
-    async def on_unload(self) -> Any:
-        ...
+    async def on_load(self) -> Any: ...
 
-    async def client_ready(self, client, db):
-        ...
+    async def on_unload(self) -> Any: ...
 
-    def get(self, key: str, default: Any = None) -> Any:
-        ...
+    async def client_ready(self, client, db): ...
 
-    def set(self, key: str, value: Any) -> None:
-        ...
+    def get(self, key: str, default: Any = None) -> Any: ...
+
+    def set(self, key: str, value: Any) -> None: ...
 
 
 class ModulesManager:
     """Manager of modules"""
 
     def __init__(
-        self,
-        client: TelegramClient,
-        db: database.Database,
-        me: types.User
+        self, client: TelegramClient, db: database.Database, me: types.User
     ) -> None:
         self.modules: List[Module]
         self.watcher_handlers: List[FunctionType]
 
-        self.command_handlers: Dict[str, FunctionType] 
-        self.message_handlers: Dict[str, FunctionType] 
-        self.inline_handlers: Dict[str, FunctionType] 
-        self.callback_handlers: Dict[str, FunctionType] 
+        self.command_handlers: Dict[str, FunctionType]
+        self.message_handlers: Dict[str, FunctionType]
+        self.inline_handlers: Dict[str, FunctionType]
+        self.callback_handlers: Dict[str, FunctionType]
         self.loops: List[FunctionType]
 
         self._local_modules_path: str = "./teagram/modules"
@@ -90,17 +71,19 @@ class ModulesManager:
         self.bot_manager: bot.BotManager
         self.inline: bot.BotManager
 
+
 class WaitForDefault:
     pass
 
+
 @dataclass
 class ConfigValue:
-    option: str 
-    doc: str = ''
+    option: str
+    doc: str = ""
     default: Any = None
     value: Any = field(default_factory=WaitForDefault)
     validator: Union[Integer, String, Boolean] = None
-    
+
     def __post_init__(self):
         if isinstance(self.value, WaitForDefault) or not self.value:
             self.value = self.default
@@ -112,12 +95,17 @@ class ConfigValue:
             except ValidationError:
                 value = self.default
             except TypeError:
-                value = self.validator._valid(value, validator=self.validator._validator)
+                value = self.validator._valid(
+                    value, validator=self.validator._validator
+                )
 
         if isinstance(value, (tuple, list, dict)):
-            raise ValidationError('Неправильный тип (Проверьте типы валидаторов) / Invalid type (Check validator types)')
+            raise ValidationError(
+                "Неправильный тип (Проверьте типы валидаторов) / Invalid type (Check validator types)"
+            )
 
         object.__setattr__(self, key, value)
+
 
 @dataclass(repr=True)
 class HikkaValue:
@@ -175,13 +163,14 @@ class HikkaValue:
 
         object.__setattr__(self, key, value)
 
+
 class Config(dict):
-    def __init__(self,  *values: list[ConfigValue]):
+    def __init__(self, *values: list[ConfigValue]):
         if all(isinstance(value, (ConfigValue)) for value in values):
             self.config = {config.option: config for config in values}
         else:
             keys, defaults, docstrings = values[::3], values[1::3], values[2::3]
-        
+
             self.config = {
                 key: ConfigValue(option=key, default=default, doc=doc)
                 for key, default, doc in zip(keys, defaults, docstrings)
@@ -201,23 +190,24 @@ class Config(dict):
         try:
             return self.config[key].value
         except KeyError:
-            return None 
-        
+            return None
+
     def reload(self):
         for key in self.config:
             super().__setitem__(key, self.config[key].value)
 
+
 class Message(TeleMessage):
     """`telethon.tl.custom.Message`"""
+
     def __init__(self, *args, **kwargs):
         super.__init__(*args, **kwargs)
 
     async def edit(self, *args, **kwargs):
         return await super().edit(*args, **kwargs, parse_mode="html")
-    
+
     def __str__(self):
         return self.text
-    
+
     def __invert__(self):
         return self.raw_text
-    

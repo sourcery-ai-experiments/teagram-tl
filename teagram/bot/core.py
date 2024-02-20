@@ -5,9 +5,7 @@ import traceback
 import typing
 
 from aiogram import Bot, Dispatcher, exceptions
-from aiogram.types import (
-    InlineKeyboardMarkup
-)
+from aiogram.types import InlineKeyboardMarkup
 
 from telethon.types import Message, Photo, Document
 from telethon import TelegramClient, errors
@@ -23,13 +21,16 @@ from .. import database, types, utils
 
 logger = logging.getLogger()
 
+
 class BotManager(Events, TokenManager):
     """
     Bot Manager class.
     Manages the bot's functionalities.
     """
 
-    def __init__(self, app: TelegramClient, db: database.Database, manager: types.ModulesManager) -> None:
+    def __init__(
+        self, app: TelegramClient, db: database.Database, manager: types.ModulesManager
+    ) -> None:
         """
         Initialize the Bot Manager.
 
@@ -68,7 +69,6 @@ class BotManager(Events, TokenManager):
         if not self._token:
             new = True
 
-
             self._token = await self._create_bot()
         if not self._token:
             logger.error(error_text)
@@ -87,20 +87,22 @@ class BotManager(Events, TokenManager):
             revoke = True
 
             if not result:
-                self._token = await self._create_bot() or logger.error(error_text) or sys.exit(1)
+                self._token = (
+                    await self._create_bot() or logger.error(error_text) or sys.exit(1)
+                )
             else:
                 self._token = result
 
         if new:
             name = (await self.bot.get_me()).username
-            await self._app(StartBotRequest(name, name, 'start'))
+            await self._app(StartBotRequest(name, name, "start"))
 
             if revoke:
                 async with self._app.conversation("@BotFather") as conv:
                     try:
                         await conv.send_message("/cancel")
                     except errors.UserIsBlockedError:
-                        await self._app(UnblockRequest('@BotFather'))
+                        await self._app(UnblockRequest("@BotFather"))
 
                     await conv.send_message("/setuserpic")
                     await conv.get_response()
@@ -117,7 +119,7 @@ class BotManager(Events, TokenManager):
                         "teagram-command",
                         "/setinlinefeedback",
                         f"@{name}",
-                        "Enabled"
+                        "Enabled",
                     ]:
                         await conv.send_message(message)
                         await conv.get_response()
@@ -129,7 +131,7 @@ class BotManager(Events, TokenManager):
         self.me = await self.bot.get_me()
         self.bot_id = self.me.id
 
-        self._db.set('teagram.bot', 'token', self._token)
+        self._db.set("teagram.bot", "token", self._token)
         self._dp = Dispatcher(self.bot)
         self._register_handlers()
 
@@ -143,50 +145,51 @@ class BotManager(Events, TokenManager):
         """
         Register event handlers.
         """
-        self._dp.register_message_handler(self._message_handler, lambda _: True, content_types=["any"])
+        self._dp.register_message_handler(
+            self._message_handler, lambda _: True, content_types=["any"]
+        )
         self._dp.register_inline_handler(self._inline_handler, lambda _: True)
         self._dp.register_callback_query_handler(self._callback_handler, lambda _: True)
-        self._dp.register_chosen_inline_handler(self._chosen_inline_handler, lambda _: True)
+        self._dp.register_chosen_inline_handler(
+            self._chosen_inline_handler, lambda _: True
+        )
 
     #     hikka compatibility
     async def invoke_unit(self, inline_id: str, message: Message) -> Message:
-        return await utils.invoke_inline(
-            message,
-            self.me.username,
-            inline_id
-        )
-    
+        return await utils.invoke_inline(message, self.me.username, inline_id)
+
     async def form(
         self,
-        text: str = 'Teagram',
+        text: str = "Teagram",
         *,
         del_message: bool = True,
-        message: Message, 
+        message: Message,
         reply_markup: Union[InlineKeyboardMarkup, list, None] = None,
         callback: typing.Any = None,
         gif: typing.Any = None,
         photo: Photo = None,
         doc: Document = None,
-        **kwargs
+        **kwargs,
     ):
         unit_id = (callback if isinstance(callback, str) else None) or utils.random_id()
         self._units[unit_id] = {
-            'type': 'form',
-            'title': 'Teagram',
-            'description': "Teagram's form",
-            'text': text,
-            'keyboard': reply_markup,
-            'reply_markup': reply_markup,
-            'callback': callback,
-            'message': message,
-            'photo': photo,
-            'doc': doc,
-            'gif': gif,
-            'top_msg_id': (
-                (message.reply_to.reply_to_top_id or message.reply_to.reply_to_msg_id) 
-                if (message.reply_to if message else None) else None
+            "type": "form",
+            "title": "Teagram",
+            "description": "Teagram's form",
+            "text": text,
+            "keyboard": reply_markup,
+            "reply_markup": reply_markup,
+            "callback": callback,
+            "message": message,
+            "photo": photo,
+            "doc": doc,
+            "gif": gif,
+            "top_msg_id": (
+                (message.reply_to.reply_to_top_id or message.reply_to.reply_to_msg_id)
+                if (message.reply_to if message else None)
+                else None
             ),
-            **kwargs
+            **kwargs,
         }
 
         try:
@@ -198,9 +201,6 @@ class BotManager(Events, TokenManager):
 
             error = "\n".join(traceback.format_exc().splitlines()[1:])
 
-            await utils.answer(
-                message,
-                f"❌ <code>{error}</code>"
-            )
+            await utils.answer(message, f"❌ <code>{error}</code>")
 
         return unit_id

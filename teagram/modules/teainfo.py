@@ -5,7 +5,7 @@
 #                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
 #                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
 #                                            https://t.me/itzlayz
-#                           
+#
 #                                    🔒 Licensed under the GNU AGPLv3
 #                                 https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -20,38 +20,42 @@ from ..bot import BotManager
 from telethon.tl.custom import Message
 from datetime import timedelta
 
-@loader.module(name="Info", author='teagram')
+
+@loader.module(name="Info", author="teagram")
 class InfoMod(loader.Module):
     """Узнайте что такое юзербот, или информацию о вашем 🍵teagram"""
-    strings = {'name': 'info'}
+
+    strings = {"name": "info"}
 
     def __init__(self):
         self.boot_time = time.time()
         self.config = Config(
             ConfigValue(
-                option='customText',
-                default='',
-                value=self.db.get('info', 'customText', ''),
+                option="customText",
+                default="",
+                value=self.db.get("info", "customText", ""),
                 validator=validators.String(),
-                doc="Ключевые слова: cpu, ram, tele, owner, uptime, version, platform"
+                doc="Ключевые слова: cpu, ram, tele, owner, uptime, version, platform",
             ),
             ConfigValue(
-                option='customImage',
-                doc='',
-                default='',
-                value=self.db.get('info', 'customImage', ''),
-                validator=validators.String()
-            )
+                option="customImage",
+                doc="",
+                default="",
+                value=self.db.get("info", "customImage", ""),
+                validator=validators.String(),
+            ),
         )
         self.bot: BotManager = self.bot
 
     async def text(self) -> str:
         platform = utils.get_platform()
         uptime = timedelta(seconds=round(time.time() - utils._init_time))
-        
+
         last = utils.git_hash()
-        now = str(await bash_exec('git rev-parse HEAD')).strip()
-        version = f'v{__version__}' + (' ' + self.strings('update') if last != now else "")
+        now = str(await bash_exec("git rev-parse HEAD")).strip()
+        version = f"v{__version__}" + (
+            " " + self.strings("update") if last != now else ""
+        )
         git_version = f'<a href="https://github.com/itzlayz/teagram-tl/commit/{last}">{last[:7]}</a>'
 
         me = self.manager.me.username
@@ -69,7 +73,7 @@ class InfoMod(loader.Module):
 <b>{platform}</b>
 """
 
-        custom = self.config.get('customText')
+        custom = self.config.get("customText")
 
         if custom:
             custom = custom.format(
@@ -79,20 +83,17 @@ class InfoMod(loader.Module):
                 uptime=uptime,
                 version=version,
                 platform=platform,
-                tele=telethon.__version__
+                tele=telethon.__version__,
             )
 
         return custom or default
-    
+
     async def info_cmd(self, message: Message):
         """Some information about userbot"""
-        avatar = self.config.get('customImage')
-        davatar = 'https://raw.githubusercontent.com/MuRuLOSE/teagram-assets/main/teagram_banner2v1.png'
+        avatar = self.config.get("customImage")
+        davatar = "https://raw.githubusercontent.com/MuRuLOSE/teagram-assets/main/teagram_banner2v1.png"
 
         text = await self.text()
         await utils.answer(
-            message,
-            photo=True,
-            response=avatar or davatar,
-            caption=text
+            message, photo=True, response=avatar or davatar, caption=text
         )

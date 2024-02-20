@@ -13,6 +13,7 @@ from .types import Item
 
 logger = logging.getLogger()
 
+
 class TokenManager(Item):
     """
     Token manager class.
@@ -28,11 +29,11 @@ class TokenManager(Item):
         """
         logger.info("Starting the process of creating a new bot...")
 
-        async with self._app.conversation('@BotFather') as conv:
+        async with self._app.conversation("@BotFather") as conv:
             try:
                 await conv.send_message("/cancel")
             except errors.UserIsBlockedError:
-                await self._app(UnblockRequest('@BotFather'))
+                await self._app(UnblockRequest("@BotFather"))
 
             await conv.get_response()
 
@@ -40,24 +41,28 @@ class TokenManager(Item):
             response = await conv.get_response()
 
             if any(
-                phrase in response.text
-                for phrase in ["That I cannot do.", "Sorry"]
+                phrase in response.text for phrase in ["That I cannot do.", "Sorry"]
             ):
-                if 'too many attempts' in response.text:
+                if "too many attempts" in response.text:
                     seconds = response.text.split()[-2]
-                    logger.error(f'Please try again after {seconds} seconds')
-                elif '20 bots' in response.text:
-                    logger.error("You have 20 bots, please delete one of your bots to continue")
+                    logger.error(f"Please try again after {seconds} seconds")
+                elif "20 bots" in response.text:
+                    logger.error(
+                        "You have 20 bots, please delete one of your bots to continue"
+                    )
                 else:
-                    logger.error("An error occurred while creating the bot. @BotFather's response:")
+                    logger.error(
+                        "An error occurred while creating the bot. @BotFather's response:"
+                    )
                     logger.error(response.text)
 
                 return sys.exit(0)
 
-
-            await conv.send_message(f"Teagram Userbot of {utils.get_display_name(self._manager.me)[:45]}")
+            await conv.send_message(
+                f"Teagram Userbot of {utils.get_display_name(self._manager.me)[:45]}"
+            )
             await conv.get_response()
-            
+
             bot_username = f"teagram_{utils.random_id(6)}_bot"
 
             await conv.send_message(bot_username)
@@ -66,11 +71,12 @@ class TokenManager(Item):
             response = await conv.get_response()
 
             search = re.search(r"(?<=<code>)(.*?)(?=</code>)", response.text)
-            if not search and not (search := re.search(
-                r"\d{1,}:[0-9a-zA-Z_-]{35}",
-                response.text
-            )):
-                logger.error("An error occurred while creating the bot. @BotFather's response:")
+            if not search and not (
+                search := re.search(r"\d{1,}:[0-9a-zA-Z_-]{35}", response.text)
+            ):
+                logger.error(
+                    "An error occurred while creating the bot. @BotFather's response:"
+                )
                 return logger.error(response.text)
 
             token = search.group(0)
@@ -83,14 +89,14 @@ class TokenManager(Item):
 
             await conv.send_file("assets/teagram_bot.png")
             await conv.get_response()
-            
+
             for message in [
                 "/setinline",
                 f"@{bot_username}",
                 "teagram-command",
                 "/setinlinefeedback",
                 f"@{bot_username}",
-                "Enabled"
+                "Enabled",
             ]:
                 await conv.send_message(message)
                 await conv.get_response()
@@ -111,7 +117,7 @@ class TokenManager(Item):
             try:
                 await conv.send_message("/cancel")
             except errors.UserIsBlockedError:
-                await self._app(UnblockRequest('@BotFather'))
+                await self._app(UnblockRequest("@BotFather"))
 
             await conv.get_response()
 
@@ -122,20 +128,18 @@ class TokenManager(Item):
                 return logger.error("No created bots")
 
             if not response.reply_markup:
-                logger.warning('reply_markup not found')
+                logger.warning("reply_markup not found")
                 time.sleep(1.5)
                 response = await conv.get_response()
 
-            if not getattr(response.reply_markup, 'rows', None):
-                logger.warning('Retrying (CTRL + Z/C to stop)')
+            if not getattr(response.reply_markup, "rows", None):
+                logger.warning("Retrying (CTRL + Z/C to stop)")
                 await self._revoke_token()
 
             found = False
             for row in response.reply_markup.rows:
                 for button in row.buttons:
-                    if search := re.search(
-                        r"@teagram_[0-9a-zA-Z]{6}_bot", button.text
-                    ):
+                    if search := re.search(r"@teagram_[0-9a-zA-Z]{6}_bot", button.text):
                         self.bot_username = button.text
 
                         await conv.send_message(button.text)

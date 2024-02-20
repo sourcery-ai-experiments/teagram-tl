@@ -1,27 +1,27 @@
 function showNotification(title, text) {
   let notificationContainer = document.getElementById("notification-container");
-  
+
   let notification = document.createElement("div");
   notification.className = "notification";
-  
+
   let notificationTitle = document.createElement("h3");
   notificationTitle.textContent = title;
-  
+
   let notificationText = document.createElement("p");
   notificationText.textContent = text;
-  
+
   notification.appendChild(notificationTitle);
   notification.appendChild(notificationText);
-  
+
   notificationContainer.appendChild(notification);
-  
-  setTimeout(function() {
+
+  setTimeout(function () {
     notification.classList.add("show");
   }, 100);
-  
-  setTimeout(function() {
+
+  setTimeout(function () {
     notification.classList.remove("show");
-    setTimeout(function() {
+    setTimeout(function () {
       notificationContainer.removeChild(notification);
     }, 300);
   }, 3000);
@@ -29,28 +29,28 @@ function showNotification(title, text) {
 
 function showNotificationError(title, text) {
   let notificationContainer = document.getElementById("notification-container-err");
-  
+
   let notification = document.createElement("div");
   notification.className = "notification-err";
-  
+
   let notificationTitle = document.createElement("h3");
   notificationTitle.textContent = title;
-  
+
   let notificationText = document.createElement("p");
   notificationText.textContent = text;
-  
+
   notification.appendChild(notificationTitle);
   notification.appendChild(notificationText);
-  
+
   notificationContainer.appendChild(notification);
-  
-  setTimeout(function() {
+
+  setTimeout(function () {
     notification.classList.add("show");
   }, 100);
-  
-  setTimeout(function() {
+
+  setTimeout(function () {
     notification.classList.remove("show");
-    setTimeout(function() {
+    setTimeout(function () {
       notificationContainer.removeChild(notification);
     }, 300);
   }, 3000);
@@ -62,84 +62,84 @@ let _interval = null;
 
 let _2fa = false;
 
-function genqr(){
+function genqr() {
   let port = "";
-  if (window.location.port){
+  if (window.location.port) {
     port = `:${window.location.port}`
   }
 
-  fetch(`${window.location.href}qrcode`, {method: "GET"})
-  .then(
-      (response) => {return response.text()}
-  ).then(
+  fetch(`${window.location.href}qrcode`, { method: "GET" })
+    .then(
+      (response) => { return response.text() }
+    ).then(
       (data) => {
-          let _qr = document.getElementById("qr_placeholder");
-          let img = _qr.getElementsByTagName("canvas")[0]
-        
+        let _qr = document.getElementById("qr_placeholder");
+        let img = _qr.getElementsByTagName("canvas")[0]
 
-          if (img){
-            img.remove()
-          }
 
-          const qrCode = new QRCodeStyling({
-            "width": 350,
-            "height": 350,
-            "data": data,
-            "margin":5,
-            "imageOptions":{
-              "hideBackgroundDots":true,
-              "imageSize":0.4,
-              "margin":0
-            },
-            "dotsOptions":{
-              "type":"extra-rounded",
-              "color":"#000000",
-              "gradient":null
-            },
-            "image": "https://avatars.githubusercontent.com/u/6113871"
-          });
+        if (img) {
+          img.remove()
+        }
 
-          qrCode.append(_qr)
-          _qr.title = "";
+        const qrCode = new QRCodeStyling({
+          "width": 350,
+          "height": 350,
+          "data": data,
+          "margin": 5,
+          "imageOptions": {
+            "hideBackgroundDots": true,
+            "imageSize": 0.4,
+            "margin": 0
+          },
+          "dotsOptions": {
+            "type": "extra-rounded",
+            "color": "#000000",
+            "gradient": null
+          },
+          "image": "https://avatars.githubusercontent.com/u/6113871"
+        });
+
+        qrCode.append(_qr)
+        _qr.title = "";
       }
-  )
+    )
 }
 
-function updating_qr(){
+function updating_qr() {
   tries += 1
 
   if (__qr) {
-      fetch(`${window.location.href}checkqr`, {method: "GET"})
+    fetch(`${window.location.href}checkqr`, { method: "GET" })
       .then(
-          (response) => {return response.text()}
+        (response) => { return response.text() }
       ).then(
-          (data) => {
-              if (data == 'password') {
-                  __qr = false
-                  _2fa = true
-                  showNotification("2FA", 'Enter 2FA password')
+        (data) => {
+          if (data == 'password') {
+            __qr = false
+            _2fa = true
+            showNotification("2FA", 'Enter 2FA password')
 
-                  document.getElementById(
-                    "qr_placeholder"
-                  ).remove()
-              }                          
+            document.getElementById(
+              "qr_placeholder"
+            ).remove()
           }
+        }
       ).catch(
-          (error) => {showNotificationError("ERROR", error); clearInterval(_interval)}
+        (error) => { showNotificationError("ERROR", error); clearInterval(_interval) }
       )
-      if (__qr && (tries == 10)){
-          tries = 0
+    if (__qr && (tries == 10)) {
+      tries = 0
 
-          genqr()
-      }
-  }else{
+      genqr()
+    }
+  } else {
     clearInterval(_interval)
   }
 }
 
 async function post(endpoint, headers) {
   try {
-      const response = await fetch(window.location.href + endpoint, {
+    const response = await fetch(window.location.href + endpoint, {
       method: 'POST',
       headers: headers,
     });
@@ -151,13 +151,13 @@ async function post(endpoint, headers) {
 }
 
 document.getElementById("enter").onclick = async () => {
-  if (!_2fa){
+  if (!_2fa) {
     const headers = new Headers()
 
     const _id = document.getElementById("api_id").value
     const _hash = document.getElementById("api_hash").value
 
-    if (!_id || !_hash){
+    if (!_id || !_hash) {
       showNotificationError("Error", "You didn't enter api_id or api_hash")
       return
     }
@@ -172,18 +172,18 @@ document.getElementById("enter").onclick = async () => {
         showNotification('Success', 'You are successfully logged, wait for inline bot!');
       } else if (data == 'qrcode') {
         showNotification('QRCode', 'Scan QRCode');
-        if (!_interval){
+        if (!_interval) {
           genqr();
           setInterval(updating_qr, 1000)
         }
-      } else{
+      } else {
         console.log(data)
       }
     } catch (error) {
       console.error('Error:', error);
     }
-  }else{
-    if (__qr){
+  } else {
+    if (__qr) {
       showNotificationError("Error", "You didn't scan QRCode")
       return;
     }
@@ -191,7 +191,7 @@ document.getElementById("enter").onclick = async () => {
     const headers = new Headers()
     const passwd = document.getElementById("password").value
 
-    if (!passwd){
+    if (!passwd) {
       showNotificationError("Error", "You didn't enter 2FA password")
       return
     }
@@ -200,25 +200,25 @@ document.getElementById("enter").onclick = async () => {
 
     try {
       const data = await post('twofa', headers)
-      
+
       if (!data || data == null || data == "null") {
         showNotification('Success', 'You are successfully logged, wait for inline bot!');
-      }else{
+      } else {
         console.log(data)
       }
-    } catch(error) {
+    } catch (error) {
       console.log(data)
     }
-  }  
+  }
 }
 
 let themeToggle = document.getElementById("theme-toggle")
-themeToggle.addEventListener("click", function() {
+themeToggle.addEventListener("click", function () {
   document.body.classList.toggle("dark-theme")
 
-  if (document.body.classList.contains("dark-theme")){
+  if (document.body.classList.contains("dark-theme")) {
     localStorage.setItem('theme', 'dark-theme')
-  }else{
+  } else {
     localStorage.setItem('theme', '')
   }
 

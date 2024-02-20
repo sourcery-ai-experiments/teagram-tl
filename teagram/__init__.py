@@ -3,4 +3,4 @@ __license__ = "GNU Affero General Public License v3.0"
 __copyright__ = "Copyright (C) 2023 Teagram"
 __version__ = "1.0.2"
 
-init_time = __import__('time').time()
+init_time = __import__("time").time()
