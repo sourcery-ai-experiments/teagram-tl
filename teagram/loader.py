@@ -17,7 +17,6 @@ import re
 import subprocess
 
 import logging
-import traceback
 
 import requests
 import inspect
@@ -30,6 +29,7 @@ from typing import Union, List, Dict, Any, Callable
 from types import FunctionType, LambdaType
 
 from telethon import TelegramClient, types
+
 from . import dispatcher, utils, database, bot, translation
 from . import validators as _validators
 from . import types as ttypes
@@ -96,7 +96,7 @@ class Loop:
             try:
                 await self.func(self.method, *args, **kwargs)
             except Exception:
-                logger.error(traceback.format_exc())
+                logger.exception(f"{self.func.__name__} loop got error:")
 
             await asyncio.sleep(self.interval)
 
@@ -135,7 +135,7 @@ class Module:
     async def client_ready(self, client, db): ...
 
     def get(self, key: str, default: Any = None) -> Any:
-        db = getattr(self, "db", {})  # we can't get db now
+        db = getattr(self, "db", {})
 
         return db.get(self.__class__.__name__, key, default)
 
@@ -397,7 +397,7 @@ class ModulesManager:
         await self.bot_manager.load()
 
         self.inline = self.bot_manager
-        self.me.phone = "sup"
+        self.me.phone = None
 
         setattr(app, "inline_bot", self.inline.bot)
         for local_module in filter(

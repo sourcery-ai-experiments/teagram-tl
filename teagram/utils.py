@@ -461,6 +461,7 @@ async def answer(
     """
     client: TelegramClient = message._client
     chat = get_chat(message)
+    reply_to = get_topic(message) if topic else message.id
 
     if isinstance(message, list):
         message: Message = message[0]
@@ -475,7 +476,7 @@ async def answer(
                 file,
                 caption=f"📁 <b>Сообщение отправлено файлом</b> (<code>{len(response)}/4096</code>)",
                 parse_mode="HTML",
-                reply_to=(get_topic(message) if topic else message.id),
+                reply_to=reply_to,
                 **kwargs,
             )
 
@@ -491,7 +492,7 @@ async def answer(
                 msg = await message.reply(
                     response,
                     parse_mode=parse_mode,
-                    reply_to=(get_topic(message) if topic else message.id),
+                    reply_to=reply_to,
                     **kwargs,
                 )
 
@@ -501,7 +502,7 @@ async def answer(
             response,
             caption=caption,
             parse_mode=parse_mode,
-            reply_to=(get_topic(message) if topic else message.id),
+            reply_to=reply_to,
             **kwargs,
         )
 
