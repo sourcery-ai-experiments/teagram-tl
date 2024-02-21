@@ -26,9 +26,16 @@ class HelpMod(loader.Module):
                 "smile",
                 "smile module_name - commands",
                 "⚙",
-                self.db.get("Help", "smile", None),
+                self.get("smile"),
                 validators.String(),
-            )
+            ),
+            ConfigValue(
+                "show_inline",
+                "Shows inline commands and inline bot",
+                True,
+                self.get("show_inline"),
+                validators.Boolean(),
+            ),
         )
 
     async def help_cmd(self, message: types.Message, args: str):
@@ -51,12 +58,15 @@ class HelpMod(loader.Module):
                     f"<code>{command}</code>" for command in module.command_handlers
                 )
 
-                inline = (
-                    " <b>| 🤖</b>: " if module.inline_handlers else ""
-                ) + " <b>|</b> ".join(
-                    f"<code>{inline_command}</code>"
-                    for inline_command in module.inline_handlers
-                )
+                inline = ""
+                if self.get("show_inline"):
+                    inline = (
+                        " <b>| 🤖</b>: " if module.inline_handlers else ""
+                    ) + " <b>|</b> ".join(
+                        f"<code>{inline_command}</code>"
+                        for inline_command in module.inline_handlers
+                    )
+
                 if commands or inline:
                     text += (
                         f"\n{self.config['smile']} <b>{module.name}</b> - "
@@ -65,7 +75,11 @@ class HelpMod(loader.Module):
                     )
 
             modules_count = len(self.manager.modules) - 1
-            bot_inline_info = f"<emoji document_id=5228968570863496802>🤖</emoji> {self.strings['ibot']}: <b>{self.bot_username}</b>\n"
+            bot_inline_info = (
+                f"<emoji document_id=5228968570863496802>🤖</emoji> {self.strings['ibot']}: <b>{self.bot_username}</b>\n"
+                if self.get("show_inline")
+                else ""
+            )
 
             return await utils.answer(
                 message,
@@ -80,7 +94,6 @@ class HelpMod(loader.Module):
             )
 
         prefix = self.db.get("teagram.loader", "prefixes", ["."])[0]
-
         command_descriptions = "\n".join(
             f"👉 <code>{prefix + command}</code>\n"
             f"    ╰ {(module.command_handlers[command].__doc__ or self.strings['nomd']).strip()}"

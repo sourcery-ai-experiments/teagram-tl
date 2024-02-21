@@ -142,3 +142,7 @@ class InlineCall(CallbackQuery):
             return False
         except Exception:
             logger.exception("Can't delete inline call")
+
+
+class InlineMessage:
+    pass

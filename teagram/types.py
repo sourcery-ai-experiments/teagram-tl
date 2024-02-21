@@ -166,7 +166,7 @@ class HikkaValue:
 
 class Config(dict):
     def __init__(self, *values: list[ConfigValue]):
-        if all(isinstance(value, (ConfigValue)) for value in values):
+        if all(isinstance(value, (ConfigValue, HikkaValue)) for value in values):
             self.config = {config.option: config for config in values}
         else:
             keys, defaults, docstrings = values[::3], values[1::3], values[2::3]
