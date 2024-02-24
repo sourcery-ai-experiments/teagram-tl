@@ -12,6 +12,7 @@
 from . import auth, database, loader, web, utils, __version__
 
 from telethon.tl.functions.channels import InviteToChannelRequest, EditAdminRequest
+from telethon.tl.functions.messages import StartBotRequest
 from telethon.types import ChatAdminRights
 
 from aiogram import Bot
@@ -79,7 +80,9 @@ class Main:
 
             return
         except Exception:
-            _id = dict(await bot.get_me())["id"]
+            me = dict(await bot.get_me())
+            _id = me["id"]
+
             admin = ChatAdminRights(
                 post_messages=True,
                 ban_users=True,
@@ -87,8 +90,10 @@ class Main:
                 delete_messages=True,
             )
 
-        await app(InviteToChannelRequest(db.cloud.input_chat, [_id]))
+        username = me["username"]
 
+        await app(StartBotRequest(username, username, "start"))
+        await app(InviteToChannelRequest(db.cloud.input_chat, [_id]))
         await app(EditAdminRequest(db.cloud.input_chat, _id, admin, "Teagram"))
 
     async def main(self):
@@ -158,9 +163,9 @@ class Main:
                 else f"<b>✅ Обновление прошло успешно! ({restarted} сек.)</b>"
             )
             en = (
-                f"<b>✅ Reboot was successful! ({restarted} сек.)</b>"
+                f"<b>✅ Reboot was successful! ({restarted} seconds.)</b>"
                 if restart["type"] == "restart"
-                else f"<b>✅ The update was successful! ({restarted} сек.)</b>"
+                else f"<b>✅ The update was successful! ({restarted} seconds.)</b>"
             )
 
             lang = self.db.get("teagram.loader", "lang", "")

@@ -30,7 +30,7 @@ from aiogram.utils.exceptions import CantParseEntities, BotBlocked, Unauthorized
 no_git = False
 try:
     import git
-except:  # noqa: E722
+except Exception:
     no_git = True
 
 

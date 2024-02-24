@@ -550,8 +550,9 @@ class ModulesManager:
                 return True
             try:
                 requirements = re.findall(
-                    r"#\srequired:\s+([\w-]+(?:\s+[\w-]+)*)", module_source
+                    r"#\s*(requires|required):\s*(.+?)\n", module_source
                 )
+
                 if not requirements:
                     requirements = []
                     imports = re.findall(
@@ -568,12 +569,13 @@ class ModulesManager:
                             requirements.append(_import)
 
                     requirements = " ".join(requirements)
+
                     if not requirements:
                         raise TypeError("Installation packages not specified")
             except TypeError:
                 return logger.exception("")
 
-            logger.info(f"Installing packages: {', '.join(requirements)}...")
+            logger.info(f"Installing packages: {requirements[0][-1]}...")
             try:
                 subprocess.run(
                     [
@@ -582,7 +584,7 @@ class ModulesManager:
                         "pip",
                         "install",
                         "--user",
-                        requirements,
+                        requirements[0][-1],
                     ]
                 )
             except subprocess.CalledProcessError as error:

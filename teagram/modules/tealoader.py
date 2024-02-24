@@ -113,22 +113,45 @@ class LoaderMod(loader.Module):
             return await utils.answer(message, self.strings["errapi"])
 
         raw_link = api_result
-        modules = await utils.run_sync(requests.get, f"{raw_link}all.txt")
-        if modules.status_code != 200:
-            return await utils.answer(
-                message, self.strings["noalltxt"].format(modules_repo=modules_repo)
-            )
-
-        modules = modules.text.splitlines()
+        modules = await self.get_module_list(raw_link)
+        modules_text = "\n".join(map("<code>{}</code>".format, modules))
 
         if not args:
-            text = self.strings["listmods"].format(
-                modules_repo=modules_repo
-            ) + "\n".join(map("<code>{}</code>".format, modules))
+            text = (
+                self.strings["listmods"].format(modules_repo=modules_repo)
+                + modules_text
+            )
             return await utils.answer(message, text, link_preview=False)
 
-        error_text = None
-        module_name = None
+        count, error_text, module_name = await self.load_modules(
+            modules, raw_link, args
+        )
+
+        if error_text:
+            return await utils.answer(message, error_text)
+
+        return await utils.answer(
+            message,
+            (
+                self.strings["loadedmod"].format(module_name)
+                if args != "all"
+                else self.strings["loaded"].format(count, len(modules))
+            )
+            + "\n"
+            + self.prep_docs(module_name),
+        )
+
+    async def get_module_list(self, raw_link):
+        modules = await utils.run_sync(requests.get, f"{raw_link}all.txt")
+        if modules.status_code != 200:
+            modules = await utils.run_sync(requests.get, f"{raw_link}full.txt")
+            if modules.status_code != 200:
+                return []
+
+        return modules.text.splitlines()
+
+    async def load_modules(self, modules, raw_link, args):
+        error_text, module_name = None, None
         count = 0
 
         if args == "all":
@@ -172,25 +195,14 @@ class LoaderMod(loader.Module):
             except requests.exceptions.RequestException:
                 error_text = self.strings["reqerr"]
 
-            if error_text:
-                return await utils.answer(message, error_text)
+            if not error_text:
+                self.db.set(
+                    "teagram.loader",
+                    "modules",
+                    list(set(self.db.get("teagram.loader", "modules", []) + [args])),
+                )
 
-            self.db.set(
-                "teagram.loader",
-                "modules",
-                list(set(self.db.get("teagram.loader", "modules", []) + [args])),
-            )
-
-        return await utils.answer(
-            message,
-            (
-                self.strings["loadedmod"].format(module_name)
-                if args != "all"
-                else self.strings["loaded"].format(count, len(modules))
-            )
-            + "\n"
-            + self.prep_docs(module_name),
-        )
+        return count, error_text, module_name
 
     @loader.command(alias="dlm")
     async def dlmod(self, message: Message, args: str):

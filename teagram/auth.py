@@ -125,9 +125,9 @@ class Auth:
             if not me:
                 raise errors.AuthKeyUnregisteredError("?")
         except errors.AuthKeyUnregisteredError:
-            qr = input("Login by QR-CODE? y/n ").lower().split()
+            qr = input("Login by QR-CODE? y/n ").lower()
 
-            if qr[0] == "y":
+            if "y" in qr:
                 qr_ = False
                 while True:
                     try:
