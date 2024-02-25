@@ -30,7 +30,7 @@ from types import FunctionType, LambdaType
 
 from telethon import TelegramClient, types
 
-from . import dispatcher, utils, database, bot, translation
+from . import dispatcher, utils, database, bot, translation, permissions
 from . import validators as _validators
 from . import types as ttypes
 
@@ -335,6 +335,10 @@ def tds(cls: type):
     return cls
 
 
+owner = permissions.owner
+unrestricted = permissions.unrestricted
+
+
 # hikka support
 ModuleConfig = ttypes.Config
 ConfigValue = ttypes.HikkaValue
@@ -386,6 +390,8 @@ class ModulesManager:
         self.dp: dispatcher.DispatcherManager = None
         self.bot_manager: bot.BotManager = None
         self.inline: bot.BotManager = None  # same as bot_manager
+
+        self.security = permissions.Security(self._db)
 
     async def load(self, app: TelegramClient) -> bool:
         setattr(app, "loader", self)

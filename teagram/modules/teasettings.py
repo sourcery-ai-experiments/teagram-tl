@@ -211,7 +211,7 @@ class SettingsMod(loader.Module):
         await msg.delete()
 
     @loader.command()
-    async def adduser(self, message: types.Message):
+    async def addowner(self, message: types.Message):
         if not (reply := await message.message.get_reply_message()):
             return await utils.answer(message, self.strings["noreply"])
 
@@ -228,7 +228,7 @@ class SettingsMod(loader.Module):
         await utils.answer(message, self.strings["adduser"])
 
     @loader.command()
-    async def rmuser(self, message: types.Message):
+    async def rmowner(self, message: types.Message):
         if not (reply := await message.message.get_reply_message()):
             return await utils.answer(message, self.strings["noreply"])
 

@@ -13,9 +13,8 @@ from types import FunctionType
 from typing import Any, Dict, List, Union, Callable
 
 from telethon import TelegramClient, types
-from telethon.tl.custom import Message as TeleMessage
 
-from . import database, bot, dispatcher
+from . import database
 from .translation import Translator
 from .validators import Integer, String, Boolean, ValidationError, Validator
 
@@ -67,9 +66,9 @@ class ModulesManager:
         self.translator: Translator
         self.core_modules: List[str]
 
-        self.dp: dispatcher.DispatcherManager
-        self.bot_manager: bot.BotManager
-        self.inline: bot.BotManager
+        self.dp
+        self.inline
+        self.bot_manager
 
 
 class WaitForDefault:
@@ -195,19 +194,3 @@ class Config(dict):
     def reload(self):
         for key in self.config:
             super().__setitem__(key, self.config[key].value)
-
-
-class Message(TeleMessage):
-    """`telethon.tl.custom.Message`"""
-
-    def __init__(self, *args, **kwargs):
-        super.__init__(*args, **kwargs)
-
-    async def edit(self, *args, **kwargs):
-        return await super().edit(*args, **kwargs, parse_mode="html")
-
-    def __str__(self):
-        return self.text
-
-    def __invert__(self):
-        return self.raw_text

@@ -236,9 +236,6 @@ class LoaderMod(loader.Module):
             if not module:
                 return await utils.answer(message, self.strings["errmod"])
 
-            with open(f"teagram/modules/{module}.py", "w", encoding="utf-8") as file:
-                file.write(response.text)
-
             await utils.answer(
                 message,
                 self.strings["loadedmod"].format(module)

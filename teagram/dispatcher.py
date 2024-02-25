@@ -16,6 +16,7 @@ from types import FunctionType
 from telethon import TelegramClient, types
 from telethon.events import NewMessage, MessageEdited
 from typing import Union
+
 from telethon.tl.custom import Message
 
 from . import loader, utils
@@ -44,9 +45,10 @@ class DispatcherManager:
             if not coro:
                 return False
         else:
-            _users = self.manager._db.get("teagram.loader", "users", [])
-
-            if not message.out and message.sender_id not in _users and not watcher:
+            if (
+                not await self.manager.security.check_permissions(func, message)
+                and not watcher
+            ):
                 return False
 
         return True
