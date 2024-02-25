@@ -37,11 +37,14 @@ class SettingsMod(loader.Module):
         f"<code>{k}</code>: <code>{v}</code>" for k, v in _nameToLevel.items()
     )
 
+    async def on_load(self):
+        self._logger = log.handlers[0]
+
     async def logs_cmd(self, message: types.Message, args: str):
         """Отправляет логи. Использование: logs <уровень>"""
         try:
             args = int(args)
-        except:  # noqa: E722
+        except Exception:
             args = args.strip().upper()
 
         if not args or (
