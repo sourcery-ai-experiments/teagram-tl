@@ -60,6 +60,15 @@ class LoaderMod(loader.Module):
     """Загрузчик модулей"""
 
     strings = {"name": "loader"}
+    def __init__(self):
+        self.config = loader.ModuleConfig(
+            loader.ConfigValue(
+                "save_module",
+                True,
+                "Saves module on load",
+                validator=loader.validators.Boolean()
+            )
+        )
 
     def prep_docs(self, module: str) -> str:
         module = self.lookup(module)
@@ -129,6 +138,13 @@ class LoaderMod(loader.Module):
 
         if error_text:
             return await utils.answer(message, error_text)
+
+        if self.get("save_module"):
+            self.db.set(
+                "teagram.loader",
+                "modules",
+                list(set(self.db.get("teagram.loader", "modules", []) + [raw_link])),
+            )
 
         return await utils.answer(
             message,
@@ -282,9 +298,14 @@ class LoaderMod(loader.Module):
                 ],
             )
 
-        module = "_".join(module_name.lower().split())
+        
         if module_name is True:
             return await utils.answer(message, self.strings["downdedreq"])
+        
+        module = "_".join(module_name.lower().split())
+        if self.get("save_module"):
+            with open(f"teagram/modules/{module_name}.py", "w", encoding="utf-8") as file:
+                file.write(source)
 
         await utils.answer(
             message,
@@ -309,7 +330,7 @@ class LoaderMod(loader.Module):
             "help",
             "info",
             "terminal",
-            "tester",
+            "settings",
             "updater",
             "loader",
         ]
