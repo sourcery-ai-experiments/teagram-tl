@@ -57,7 +57,7 @@ class Security:
         return message.from_id in self.db.get("teagram.loader", "users", [])
 
     async def check_permissions(self, func: FunctionType, message) -> bool:
-        permissions = getattr(func, "permissions", [])
+        permissions = getattr(func, "permissions", [OWNER])
 
         _approved_user = self.approved_user(message)
         _owner = OWNER in permissions
