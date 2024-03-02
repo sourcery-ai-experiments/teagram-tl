@@ -54,7 +54,9 @@ class Security:
         self.db = db
 
     def approved_user(self, message) -> bool:
-        return message.from_id in self.db.get("teagram.loader", "users", [])
+        return (
+            message.from_id in self.db.get("teagram.loader", "users", []) or message.out
+        )
 
     async def check_permissions(self, func: FunctionType, message) -> bool:
         permissions = getattr(func, "permissions", [OWNER])
