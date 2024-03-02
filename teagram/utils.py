@@ -672,7 +672,7 @@ def get_platform() -> str:
     elif IS_WSL:
         return "🧱 WSL"
     elif IS_WIN:
-        return "💻 Windows"
+        return "<emoji document_id=5866334008123591985>💻</emoji> Windows"
     elif IS_CODESPACES:
         return "👨‍💻 Github Codespaces"
     else:

@@ -61,13 +61,13 @@ class InfoMod(loader.Module):
         me = self.manager.me.username
 
         default = f"""
-<b>👑 {self.strings('owner')}</b>:  <code>{me}</code>
-<b>☕ {self.strings('version')}</b>:  <code>{version}</code> ({git_version})
+<b><emoji document_id=5433758796289685818>👑</emoji> {self.strings('owner')}</b>:  <code>{me}</code>
+<b><emoji document_id=5395463497783983254>☕️</emoji> {self.strings('version')}</b>:  <code>{version}</code> ({git_version})
 
 <b>💽 CPU</b>: ~<code>{utils.get_cpu()}%</code>
-<b>🧠 RAM</b>: ~<code>{utils.get_ram()}MB</code>
+<b><emoji document_id=5237799019329105246>🧠</emoji> RAM</b>: ~<code>{utils.get_ram()}MB</code>
 
-<b>⏱️ {self.strings('uptime')}</b>:  <code>{uptime}</code>
+<b><emoji document_id=5213349767672769194>⏰</emoji> {self.strings('uptime')}</b>:  <code>{uptime}</code>
 <b>📱 {self.strings('version')} telethon: <code>{telethon.__version__}</code></b>
 
 <b>{platform}</b>
