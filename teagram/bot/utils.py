@@ -289,3 +289,20 @@ class Utils:
         self._manager.callback_handlers[callback_data] = close
 
         return callback_data
+
+    async def delete_unit_message(self, call=None, unit_id: str = None):
+        try:
+            chat_id = self._units[unit_id].chat.id
+            message_id = self._units[unit_id].message.id
+
+            chat_id = getattr(self.message.chat, "id", chat_id)
+            message_id = getattr(self.message, "message_id", message_id)
+
+            if chat_id and message_id:
+                return await self._bot.delete_message(
+                    chat_id=chat_id, message_id=message_id
+                )
+
+            return False
+        except Exception:
+            logger.exception("Can't delete message")

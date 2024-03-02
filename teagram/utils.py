@@ -661,7 +661,6 @@ def get_platform() -> str:
     IS_DOCKER = "DOCKER" in os.environ
     IS_GOORM = "GOORM" in os.environ
     IS_WIN = "WINDIR" in os.environ
-    IS_ZACHOST = "zachemhost" in os.environ
     IS_WSL = "WSL_DISTRO_NAME" in os.environ
 
     if IS_TERMUX:
@@ -676,8 +675,6 @@ def get_platform() -> str:
         return "💻 Windows"
     elif IS_CODESPACES:
         return "👨‍💻 Github Codespaces"
-    elif IS_ZACHOST:
-        return "❔ Zachem㉿Host"
     else:
         return "🖥️ VDS"
 

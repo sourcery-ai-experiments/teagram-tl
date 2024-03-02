@@ -159,6 +159,10 @@ class HikkaValue:
                             raise e
 
                         value = self.default
+                    except TypeError:
+                        value = self.validator._valid(
+                            value, validator=self.validator._validator
+                        )
 
         object.__setattr__(self, key, value)
 

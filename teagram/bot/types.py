@@ -132,11 +132,16 @@ class InlineCall(CallbackQuery):
         except Exception:
             logger.exception("Can't edit inline call")
 
-    async def delete(self):
+    async def delete(
+        self, call: CallbackQuery = None, chat_id: int = None, message_id: int = None
+    ):
         try:
-            if self.message and self.message.chat:
+            chat_id = getattr(self.message.chat, "id", chat_id)
+            message_id = getattr(self.message, "message_id", message_id)
+
+            if chat_id and message_id:
                 return await self._bot.delete_message(
-                    chat_id=self.message.chat.id, message_id=self.message.message_id
+                    chat_id=chat_id, message_id=message_id
                 )
 
             return False
