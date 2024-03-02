@@ -130,7 +130,9 @@ class Main:
 
         await app.disconnect()
 
-        me, app = await auth.Auth().authorize()
+        device = getattr(self.args, "rnd_session", False)
+
+        me, app = await auth.Auth(random_device=device).authorize()
         self.db.init_cloud(app, me)
         await self.db.cloud.get_chat()
 

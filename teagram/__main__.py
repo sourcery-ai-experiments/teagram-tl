@@ -12,6 +12,7 @@ from contextlib import suppress
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--disable-web", action="store_true", help="Disable auth with web")
+parser.add_argument("--rnd-session", action="store_true", help="Random session name")
 
 if __name__ == "__main__":
     init_logging()

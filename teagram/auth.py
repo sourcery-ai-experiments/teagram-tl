@@ -14,12 +14,18 @@ from telethon.tl import types as tltypes
 from qrcode.main import QRCode
 
 from . import __version__, database
+from .utils import rnd_device
 
 db = database.db
 
 
 class Auth:
-    def __init__(self, session_name: str = "./teagram", manual=True) -> None:
+    def __init__(
+        self,
+        session_name: str = "./teagram",
+        random_device: bool = False,
+        manual: bool = True,
+    ) -> None:
         if manual:
             self._check_api_tokens()
 
@@ -36,11 +42,12 @@ class Auth:
             _id = 123
             _hash = "_"
 
+        device_model = "Teagram Userbot" if not random_device else rnd_device()
         self.app = TelegramClient(
             api_id=_id,
             api_hash=_hash,
             session=session_name,
-            device_model="Teagram Userbot",
+            device_model=device_model,
             app_version=f"v{__version__}",
         )
 

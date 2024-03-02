@@ -731,5 +731,15 @@ def get_distro() -> str:
         return
 
 
+def rnd_device() -> str:
+    """
+    :return: Random device
+    """
+    with open("assets/lorem_ipsum.txt") as file:
+        words = file.read().split()
+
+    return " ".join(random.choice(words) for _ in range(3)).title()
+
+
 rand = random_id
 get_named_platform = get_platform
