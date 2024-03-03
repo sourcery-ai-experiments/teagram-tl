@@ -6,8 +6,8 @@
 #                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
 #                                            https://t.me/itzlayz
 #
-#                                    🔒 Licensed under the GNU AGPLv3
-#                                 https://www.gnu.org/licenses/agpl-3.0.html
+#                                    🔒 Licensed under the СС-by-NC
+#                                 https://creativecommons.org/licenses/by-nc/4.0/
 
 import logging
 
@@ -60,13 +60,14 @@ class LoaderMod(loader.Module):
     """Загрузчик модулей"""
 
     strings = {"name": "loader"}
+
     def __init__(self):
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
                 "save_module",
                 True,
                 "Saves module on load",
-                validator=loader.validators.Boolean()
+                validator=loader.validators.Boolean(),
             )
         )
 
@@ -298,13 +299,14 @@ class LoaderMod(loader.Module):
                 ],
             )
 
-        
         if module_name is True:
             return await utils.answer(message, self.strings["downdedreq"])
-        
+
         module = "_".join(module_name.lower().split())
         if self.get("save_module"):
-            with open(f"teagram/modules/{module_name}.py", "w", encoding="utf-8") as file:
+            with open(
+                f"teagram/modules/{module_name}.py", "w", encoding="utf-8"
+            ) as file:
                 file.write(source)
 
         await utils.answer(

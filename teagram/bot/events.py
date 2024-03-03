@@ -118,7 +118,9 @@ class Events(Item):
 
         try:
             for key, func in self._manager.callback_handlers.items():
-                if not await self._check_filters(func, func.__self__, call):
+                if not await self._check_filters(
+                    func, getattr("func", "__self__", None), call
+                ):
                     continue
 
                 try:
@@ -181,87 +183,93 @@ class Events(Item):
                 cache_time=0,
             )
 
-        try:
-            form = self._units[query]
-            text = form.get("text")
-            keyboard = None
+        form = self._units.get(query, None)
+        if form["type"] == "form":
+            try:
+                text = form.get("text")
+                keyboard = None
 
-            if isinstance(form["keyboard"], list):
-                keyboard = self._generate_markup(form["keyboard"])
-            elif isinstance(form["reply_markup"], list):
-                keyboard = self._generate_markup(form["reply_markup"])
+                if isinstance(form["keyboard"], list):
+                    keyboard = self._generate_markup(form["keyboard"])
+                elif isinstance(form["reply_markup"], list):
+                    keyboard = self._generate_markup(form["reply_markup"])
 
-            if form["photo"]:
-                await inline_query.answer(
-                    [
-                        InlineQueryResultPhoto(
-                            id=utils.random_id(),
-                            title=form.get("title"),
-                            description=form.get("description"),
-                            input_message_content=InputMediaPhoto(
-                                form["photo"], form.get("caption", text), "HTML"
-                            ),
-                            caption=form.get("caption", text),
-                            reply_markup=keyboard,
-                            photo_url=form["photo"],
-                            thumb_url=form["photo"],
-                        )
-                    ]
-                )
-            elif form["gif"]:
-                await inline_query.answer(
-                    [
-                        InlineQueryResultGif(
-                            id=utils.random_id(20),
-                            title=form.get("title"),
-                            caption=form.get("caption", text),
-                            parse_mode="HTML",
-                            thumb_url=form.get("thumb", form["gif"]),
-                            gif_url=form["gif"],
-                            reply_markup=keyboard,
-                            input_message_content=InputMediaAnimation(
-                                form["gif"], form.get("caption", text), "HTML"
-                            ),
-                        ),
-                    ]
-                )
-            elif form["doc"]:
-                await inline_query.answer(
-                    [
-                        InlineQueryResultDocument(
-                            id=utils.random_id(),
-                            title=form.get("title"),
-                            description=form.get("description"),
-                            input_message_content=InputMediaDocument(
-                                form["doc"],
+                if form["photo"]:
+                    await inline_query.answer(
+                        [
+                            InlineQueryResultPhoto(
+                                id=utils.random_id(),
+                                title=form.get("title"),
+                                description=form.get("description"),
+                                input_message_content=InputMediaPhoto(
+                                    form["photo"], form.get("caption", text), "HTML"
+                                ),
+                                caption=form.get("caption", text),
+                                reply_markup=keyboard,
+                                photo_url=form["photo"],
+                                thumb_url=form["photo"],
+                            )
+                        ]
+                    )
+                elif form["gif"]:
+                    await inline_query.answer(
+                        [
+                            InlineQueryResultGif(
+                                id=utils.random_id(20),
+                                title=form.get("title"),
                                 caption=form.get("caption", text),
                                 parse_mode="HTML",
+                                thumb_url=form.get("thumb", form["gif"]),
+                                gif_url=form["gif"],
+                                reply_markup=keyboard,
+                                input_message_content=InputMediaAnimation(
+                                    form["gif"], form.get("caption", text), "HTML"
+                                ),
                             ),
-                            reply_markup=keyboard,
-                            document_url=form["doc"],
-                            caption=form.get("caption", text),
-                        )
-                    ]
-                )
-            else:
-                await inline_query.answer(
-                    [
-                        InlineQueryResultArticle(
-                            id=utils.random_id(),
-                            title=form.get("title"),
-                            description=form.get("description"),
-                            input_message_content=InputTextMessageContent(
-                                text, parse_mode="HTML", disable_web_page_preview=True
-                            ),
-                            reply_markup=keyboard,
-                        )
-                    ]
-                )
+                        ]
+                    )
+                elif form["doc"]:
+                    await inline_query.answer(
+                        [
+                            InlineQueryResultDocument(
+                                id=utils.random_id(),
+                                title=form.get("title"),
+                                description=form.get("description"),
+                                input_message_content=InputMediaDocument(
+                                    form["doc"],
+                                    caption=form.get("caption", text),
+                                    parse_mode="HTML",
+                                ),
+                                reply_markup=keyboard,
+                                document_url=form["doc"],
+                                caption=form.get("caption", text),
+                            )
+                        ]
+                    )
+                else:
+                    await inline_query.answer(
+                        [
+                            InlineQueryResultArticle(
+                                id=utils.random_id(),
+                                title=form.get("title"),
+                                description=form.get("description"),
+                                input_message_content=InputTextMessageContent(
+                                    text,
+                                    parse_mode="HTML",
+                                    disable_web_page_preview=True,
+                                ),
+                                reply_markup=keyboard,
+                            )
+                        ]
+                    )
+                return
+            except KeyError:
+                pass
+            except Exception:
+                traceback.print_exc()
+        elif form["type"] == "list":
+            await self.list_inline_handler(inline_query)
             return
-        except KeyError:
-            pass
-        except Exception:
-            traceback.print_exc()
 
         if not func:
             return await inline_query.answer(
