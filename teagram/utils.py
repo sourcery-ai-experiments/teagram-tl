@@ -444,7 +444,7 @@ async def answer(
     document: bool = False,
     topic: bool = False,
     caption: str = "",
-    parse_mode: str = "html",
+    parse_mode: str = "HTML",
     **kwargs,
 ) -> Message:
     """
