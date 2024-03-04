@@ -101,27 +101,34 @@ class List:
         callback = functools.partial(self._handle_page, unit_id=unit_id)
         pages = []
 
-        async def empty(*args, **kwargs):
-            pass
-
-        # «
-        # ‹
-        # ›
-        # »
+        async def empty(call, page):
+            await call.answer(page)
 
         total = len(page["strings"])
-        if current_page < 0:
-            current_page = total + current_page
-            prev_page = current_page
-        else:
-            prev_page = current_page - 1
 
+        prev_page = current_page - 1
         next_page = current_page + 1
 
+        prev_markup = (
+            {
+                "text": f"◀ {prev_page if current_page < 1 else current_page}",
+                "args": (prev_page,),
+                "callback": callback,
+            }
+            if prev_page >= 0
+            else {}
+        )
+
+        next_markup = (
+            {"text": f"{next_page + 1} ▶", "args": (next_page,), "callback": callback}
+            if next_page < total
+            else {}
+        )
+
         pages += [
-            {"text": f"‹- {prev_page}", "args": (prev_page), "callback": callback},
-            {"text": current_page + 1, "callback": empty},
-            {"text": f"{next_page + 1} -›", "args": (next_page), "callback": callback},
+            prev_markup,
+            {"text": current_page + 1, "callback": empty, "args": (next_page,)},
+            next_markup,
         ]
 
         return self._generate_markup([pages])

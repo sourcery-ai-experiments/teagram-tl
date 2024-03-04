@@ -1,6 +1,8 @@
 import logging
 import inspect
 import traceback
+import functools
+
 from aiogram.types import (
     CallbackQuery,
     Message,
@@ -88,7 +90,7 @@ class Events(Item):
         call = InlineCall(call, self)
         try:
             if func := self._units[call.data]:
-                if func.get("callback"):
+                if func.get("callback", None):
                     try:
                         await func.callback(call)
                     except Exception as error:
@@ -124,10 +126,20 @@ class Events(Item):
                     continue
 
                 try:
-                    if len(inspect.getfullargspec(func).args) == 2:
-                        await func(call)
-                    elif args := self.callback_units.get(key, ()):
-                        await func(call, args)
+                    if isinstance(func, functools.partial):
+                        args = self.callback_units.get(key, None)
+                        if not args:
+                            args = func.args
+                        else:
+                            args += func.args
+
+                        print("ARGS: ", args)
+                        await func.func(call, *args)
+                    else:
+                        if len(inspect.getfullargspec(func).args) == 2:
+                            await func(call)
+                        elif args := self.callback_units.get(key, ()):
+                            await func(call, args)
                 except AttributeError:
                     pass
                 except Exception as error:
