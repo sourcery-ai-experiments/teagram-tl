@@ -140,7 +140,7 @@ class LoaderMod(loader.Module):
         if error_text:
             return await utils.answer(message, error_text)
 
-        if self.get("save_module"):
+        if self.get("save_module", True):
             self.db.set(
                 "teagram.loader",
                 "modules",
