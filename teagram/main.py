@@ -107,9 +107,22 @@ class Main:
         await app.connect()
 
         if not getattr(self.args, "disable_web", "") and not await app.get_me():
+            import socket
+
             port = getattr(self.args, "port", None)
+
+            def check_port(port: int):
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.bind(("localhost", port))
+
+            try:
+                check_port(port)
+            except OSError as e:
+                if e.errno == 98:
+                    logger.error("Port is busy, generating new one")
+                    port = None
+
             if not port:
-                import socket
                 from random import randint
 
                 port = randint(1000, 65535)
@@ -117,10 +130,7 @@ class Main:
                     while True:
                         port = randint(1000, 65535)
                         try:
-                            with socket.socket(
-                                socket.AF_INET, socket.SOCK_STREAM
-                            ) as sock:
-                                sock.bind(("localhost", port))
+                            check_port(port)
 
                             break
                         except OSError as e:
