@@ -109,9 +109,10 @@ class List:
         prev_page = current_page - 1
         next_page = current_page + 1
 
+        # previous markups
         prev_markup = (
             {
-                "text": f"◀ {prev_page if current_page < 1 else current_page}",
+                "text": "◀️",
                 "args": (prev_page,),
                 "callback": callback,
             }
@@ -119,16 +120,44 @@ class List:
             else {}
         )
 
+        double_prev_markup = (
+            {
+                "text": "⏪",
+                "args": (prev_page - 1,),
+                "callback": callback,
+            }
+            if prev_page - 1 >= 0
+            else {}
+        )
+
+        # next markups
         next_markup = (
-            {"text": f"{next_page + 1} ▶", "args": (next_page,), "callback": callback}
+            {"text": "▶️", "args": (next_page,), "callback": callback}
             if next_page < total
             else {}
         )
 
+        double_next_markup = (
+            {
+                "text": "⏩",
+                "args": (next_page + 1,),
+                "callback": callback,
+            }
+            if next_page + 1 < total
+            else {}
+        )
+
+        current_markup = {
+            "text": current_page + 1,
+            "callback": empty,
+            "args": (next_page,),
+        }
         pages += [
+            double_prev_markup,
             prev_markup,
-            {"text": current_page + 1, "callback": empty, "args": (next_page,)},
+            current_markup,
             next_markup,
+            double_next_markup,
         ]
 
         return self._generate_markup([pages])
