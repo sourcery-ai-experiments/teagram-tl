@@ -107,21 +107,25 @@ class Main:
         await app.connect()
 
         if not getattr(self.args, "disable_web", "") and not await app.get_me():
-            import socket
-            from random import randint
+            port = getattr(self.args, "port", None)
+            if not port:
+                import socket
+                from random import randint
 
-            port = randint(1000, 65535)
-            if "windows" not in utils.get_platform().lower():
-                while True:
-                    port = randint(1000, 65535)
-                    try:
-                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                            sock.bind(("localhost", port))
+                port = randint(1000, 65535)
+                if "windows" not in utils.get_platform().lower():
+                    while True:
+                        port = randint(1000, 65535)
+                        try:
+                            with socket.socket(
+                                socket.AF_INET, socket.SOCK_STREAM
+                            ) as sock:
+                                sock.bind(("localhost", port))
 
-                        break
-                    except OSError as e:
-                        if e.errno == 98:
-                            continue
+                            break
+                        except OSError as e:
+                            if e.errno == 98:
+                                continue
 
             web_config = web.Web(port)
             await web_config.server.serve()
