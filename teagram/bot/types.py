@@ -10,11 +10,12 @@ from telethon import TelegramClient
 
 from .. import database, types
 from .utils import Utils
+from .list import List
 
 logger = logging.getLogger()
 
 
-class Item(Utils):
+class Item(Utils, List):
     """
     Base class for items.
     This class provides functionality for checking filters applied to event handlers.
@@ -45,14 +46,18 @@ class Item(Utils):
         Returns:
             bool: True if the event should be processed, False otherwise.
         """
-        if custom_filters := getattr(func, "_filters", None):
+        if custom_filters := getattr(func, "_filters", None) and module:
             coro = custom_filters(module, update_type)
             if inspect.iscoroutine(coro):
                 coro = await coro
 
             if not coro:
                 return False
-        elif update_type.from_user.id != self._manager.me.id:
+        elif (
+            update_type.from_user.id != self._manager.me.id
+            and update_type.from_user.id
+            not in self._db.get("teagram.loader", "users", [])
+        ):
             if not getattr(func, "inline_everyone", None):
                 return False
 
