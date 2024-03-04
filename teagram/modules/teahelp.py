@@ -41,7 +41,7 @@ class HelpMod(loader.Module):
     async def help_cmd(self, message: types.Message, args: str):
         """Список всех модулей"""
         try:
-            self.bot_username = f"@{(await self.bot.bot.get_me()).username}"
+            self.bot_username = f"@{self.inline.bot_username}"
         except:  # noqa: E722
             self.bot_username = self.strings["ebot"]
 
@@ -77,7 +77,7 @@ class HelpMod(loader.Module):
             modules_count = len(self.manager.modules) - 1
             bot_inline_info = (
                 f"<emoji document_id=5228968570863496802>🤖</emoji> {self.strings['ibot']}: <b>{self.bot_username}</b>\n"
-                if self.get("show_inline")
+                if self.get("show_inline", True)
                 else ""
             )
 

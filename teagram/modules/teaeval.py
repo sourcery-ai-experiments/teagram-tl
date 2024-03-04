@@ -62,6 +62,7 @@ class EvalMod(loader.Module):
                 "reply": await message.get_reply_message(),
                 "args": args,
                 "me": self.manager.me,
+                "c": self.client,
             },
         )
 
