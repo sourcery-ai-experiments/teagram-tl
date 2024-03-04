@@ -319,13 +319,8 @@ class LoaderMod(loader.Module):
         )
 
     @loader.command(alias="ulm")
-    async def unloadmod(self, message: types.Message, args: str):
+    async def unloadmod(self, message: types.Message, args: str = ""):
         """Выгрузить модуль. Использование: unloadmod <название модуля>"""
-        if not (module_name := self.manager.unload_module(args.strip())):
-            return await utils.answer(
-                message, self.strings["notfound"].format(args.strip())
-            )
-
         modules = [
             "config",
             "eval",
@@ -337,8 +332,12 @@ class LoaderMod(loader.Module):
             "loader",
         ]
 
-        if module_name in modules:
+        args = args.strip()
+        if args in modules:
             return await utils.answer(message, self.strings["cantunload"])
+
+        if not args or not (module_name := self.manager.unload_module(args)):
+            return await utils.answer(message, self.strings["notfound"].format(args))
 
         return await utils.answer(
             message, self.strings["unloadedmod"].format(module_name)
