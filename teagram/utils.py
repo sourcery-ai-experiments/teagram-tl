@@ -58,10 +58,11 @@ BASE_DIR = (
 BASE_PATH = Path(BASE_DIR)
 supress = contextlib.suppress
 
+lsb_release_exists = False
 try:
-    subprocess.run(["lsb_release"], capture_output=False, text=False)
+    subprocess.run(["lsb_release"], capture_output=True, text=False)
 except FileNotFoundError:
-    lsb_release_exists = False
+
     import traceback
     traceback.print_exc("Not found lsb_release in your system. Please, install it in your favourite package manager.")
 else:
