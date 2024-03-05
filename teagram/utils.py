@@ -58,6 +58,16 @@ BASE_DIR = (
 BASE_PATH = Path(BASE_DIR)
 supress = contextlib.suppress
 
+try:
+    subprocess.run(["lsb_release"])
+except FileNotFoundError:
+    lsb_release_exists = False
+    import traceback
+    traceback.print_exc("Not found lsb_release in your system. Please, install it in your favourite package manager.")
+else:
+    lsb_release_exists = True
+
+
 
 def git_hash():
     return git.Repo().head.commit.hexsha
@@ -734,15 +744,16 @@ def get_distro() -> str:
     Returns:
         str: Information about linux distro.
     """
+    if lsb_release_exists:
+        result = subprocess.run(["lsb_release", "-a"], capture_output=True, text=True)
 
-    result = subprocess.run(["lsb_release", "-a"], capture_output=True, text=True)
-    info = result.stdout
+        info = result.stdout
 
-    pattern = r"Description:\s+(.+)"
-    if match := re.search(pattern, info):
-        return match.group(1)
-    else:
-        return
+        pattern = r"Description:\s+(.+)"
+        if match := re.search(pattern, info):
+            return match.group(1)
+        else:
+            return
 
 
 def rnd_device() -> str:
