@@ -688,6 +688,7 @@ def get_platform() -> str:
     IS_GOORM = "GOORM" in os.environ
     IS_WIN = "WINDIR" in os.environ
     IS_WSL = "WSL_DISTRO_NAME" in os.environ
+    IS_JAMHOST = "JAMHOST" in os.environ
 
     if IS_TERMUX:
         return "📱 Termux"
@@ -701,6 +702,8 @@ def get_platform() -> str:
         return "<emoji document_id=5866334008123591985>💻</emoji> Windows"
     elif IS_CODESPACES:
         return "👨‍💻 Github Codespaces"
+    elif IS_JAMHOST:
+        return "🧃 Jamhost"
     else:
         return "🖥️ VDS"
 
