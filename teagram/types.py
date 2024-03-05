@@ -10,12 +10,10 @@
 #                                 https://creativecommons.org/licenses/by-nc/4.0/
 
 from types import FunctionType
-from typing import Any, Dict, List, Union, Callable
+from typing import Any, Dict, List, Union, Callable, Tuple
 
 from telethon import TelegramClient, types
 
-from . import database
-from .translation import Translator
 from .validators import Integer, String, Boolean, ValidationError, Validator
 
 from ast import literal_eval
@@ -23,8 +21,8 @@ from dataclasses import dataclass, field
 
 from html.parser import HTMLParser
 
-from telethon.helpers import del_surrogate
-from telethon.extensions.html import HTMLToTelegramParser
+from telethon.helpers import add_surrogate, del_surrogate, strip_text
+from telethon.extensions.html import HTMLToTelegramParser, unparse
 
 from telethon.tl.types import (
     MessageEntityBold,
@@ -38,6 +36,7 @@ from telethon.tl.types import (
     MessageEntityStrike,
     MessageEntityBlockquote,
     MessageEntityCustomEmoji,
+    TypeMessageEntity,
 )
 
 
@@ -61,9 +60,7 @@ class Module:
 class ModulesManager:
     """Manager of modules"""
 
-    def __init__(
-        self, client: TelegramClient, db: database.Database, me: types.User
-    ) -> None:
+    def __init__(self, client: TelegramClient, db, me: types.User) -> None:
         self.modules: List[Module]
         self.watcher_handlers: List[FunctionType]
 
@@ -76,13 +73,13 @@ class ModulesManager:
         self._local_modules_path: str = "./teagram/modules"
 
         self._client: TelegramClient
-        self._db: database.Database
+        self._db
         self.me: types.User
         self.warnings: List[str]
 
         self.aliases: dict
         self.strings: dict
-        self.translator: Translator
+        self.translator
         self.core_modules: List[str]
 
         self.dp
@@ -219,10 +216,10 @@ class Config(dict):
             super().__setitem__(key, self.config[key].value)
 
 
-class HTMLParser(HTMLToTelegramParser):  # noqa: F811
+class CustomHTMLParser(HTMLToTelegramParser):  # noqa: F811
     """telethon.extensions.html with premium emojis"""
 
-    def __init__(self):
+    def __init__(self, *args):
         super().__init__()
 
     def handle_starttag(self, tag, attrs):
@@ -281,3 +278,26 @@ class HTMLParser(HTMLToTelegramParser):  # noqa: F811
                 length=0,
                 **args,
             )
+
+
+def parse(html: str) -> Tuple[str, List[TypeMessageEntity]]:
+    """
+    Parses the given HTML message and returns its stripped representation
+    plus a list of the MessageEntity's that were found.
+
+    :param html: the message with HTML to be parsed.
+    :return: a tuple consisting of (clean message, [message entities]).
+    """
+    if not html:
+        return html, []
+
+    parser = HTMLParser()
+    parser.feed(add_surrogate(html))
+    text = strip_text(parser.text, parser.entities)
+    return del_surrogate(text), parser.entities
+
+
+HTMLParser = CustomHTMLParser  # noqa: F811
+
+HTMLParser.parse = parse
+HTMLParser.unparse = unparse
