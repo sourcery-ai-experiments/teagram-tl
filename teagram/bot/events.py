@@ -195,8 +195,8 @@ class Events(Item):
                 cache_time=0,
             )
 
-        form = self._units.get(query, None)
-        if form["type"] == "form":
+        form = self._units.get(query, {})
+        if form.get("type", "") == "form":
             try:
                 text = form.get("text")
                 keyboard = None
@@ -279,7 +279,7 @@ class Events(Item):
                 pass
             except Exception:
                 traceback.print_exc()
-        elif form["type"] == "list":
+        elif form.get("type", "") == "list":
             await self.list_inline_handler(inline_query)
             return
 
