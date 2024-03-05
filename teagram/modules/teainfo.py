@@ -47,7 +47,7 @@ class InfoMod(loader.Module):
         )
         self.bot: BotManager = self.bot
 
-    async def text(self) -> str:
+    async def text(self, message: Message) -> str:
         platform = utils.get_platform()
         uptime = timedelta(seconds=round(time.time() - utils._init_time))
 
@@ -58,7 +58,12 @@ class InfoMod(loader.Module):
         )
         git_version = f'<a href="https://github.com/itzlayz/teagram-tl/commit/{last}">{last[:7]}</a>'
 
-        me = self.manager.me.username
+        me = (
+            self.manager.me.username
+            if message.sender
+            else "Anonymous"
+        )
+
 
         default = f"""
 <b><emoji document_id=5433758796289685818>👑</emoji> {self.strings('owner')}</b>:  <code>{me}</code>
@@ -70,10 +75,11 @@ class InfoMod(loader.Module):
 <b><emoji document_id=5213349767672769194>⏰</emoji> {self.strings('uptime')}</b>:  <code>{uptime}</code>
 <b>📱 {self.strings('version')} telethon: <code>{telethon.__version__}</code></b>
 
-<b>{platform}</b>
-"""
+ <b>{platform}</b>
+        """
 
         custom = self.config.get("customText")
+
 
         if custom:
             custom = custom.format(
@@ -93,7 +99,7 @@ class InfoMod(loader.Module):
         avatar = self.config.get("customImage")
         davatar = "https://raw.githubusercontent.com/MuRuLOSE/teagram-assets/main/teagram_banner2v1.png"
 
-        text = await self.text()
+        text = await self.text(message)
         await utils.answer(
             message, photo=True, response=avatar or davatar, caption=text
         )
