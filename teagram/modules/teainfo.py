@@ -44,7 +44,6 @@ class InfoMod(loader.Module):
                 validator=validators.String(),
             ),
         )
-        self.bot: BotManager = self.bot
 
     async def text(self, message: Message) -> str:
         platform = utils.get_platform()
