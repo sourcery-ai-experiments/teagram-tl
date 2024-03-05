@@ -69,7 +69,7 @@ class InfoMod(loader.Module):
 <b><emoji document_id=5213349767672769194>⏰</emoji> {self.strings('uptime')}</b>:  <code>{uptime}</code>
 <b>📱 {self.strings('version')} telethon: <code>{telethon.__version__}</code></b>
 
- <b>{platform}</b>
+<b>{platform}</b>
         """
 
         custom = self.config.get("customText")
