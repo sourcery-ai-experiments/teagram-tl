@@ -703,7 +703,7 @@ def get_platform() -> str:
     elif IS_CODESPACES:
         return "👨‍💻 Github Codespaces"
     elif IS_JAMHOST:
-        return "🧃 Jamhost"
+        return "🧃 JamHost"
     else:
         return "🖥️ VDS"
 
