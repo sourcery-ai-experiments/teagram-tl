@@ -21,6 +21,25 @@ from .validators import Integer, String, Boolean, ValidationError, Validator
 from ast import literal_eval
 from dataclasses import dataclass, field
 
+from html.parser import HTMLParser
+
+from telethon.helpers import del_surrogate
+from telethon.extensions.html import HTMLToTelegramParser
+
+from telethon.tl.types import (
+    MessageEntityBold,
+    MessageEntityItalic,
+    MessageEntityCode,
+    MessageEntityPre,
+    MessageEntityEmail,
+    MessageEntityUrl,
+    MessageEntityTextUrl,
+    MessageEntityUnderline,
+    MessageEntityStrike,
+    MessageEntityBlockquote,
+    MessageEntityCustomEmoji,
+)
+
 
 class Module:
     name: str
@@ -198,3 +217,67 @@ class Config(dict):
     def reload(self):
         for key in self.config:
             super().__setitem__(key, self.config[key].value)
+
+
+class HTMLParser(HTMLToTelegramParser):  # noqa: F811
+    """telethon.extensions.html with premium emojis"""
+
+    def __init__(self):
+        super().__init__()
+
+    def handle_starttag(self, tag, attrs):
+        self._open_tags.appendleft(tag)
+        self._open_tags_meta.appendleft(None)
+
+        attrs = dict(attrs)
+        EntityType = None
+        args = {}
+        if tag == "strong" or tag == "b":
+            EntityType = MessageEntityBold
+        elif tag == "em" or tag == "i":
+            EntityType = MessageEntityItalic
+        elif tag == "u":
+            EntityType = MessageEntityUnderline
+        elif tag == "del" or tag == "s":
+            EntityType = MessageEntityStrike
+        elif tag == "blockquote":
+            EntityType = MessageEntityBlockquote
+        elif tag == "code":
+            try:
+                pre = self._building_entities["pre"]
+                try:
+                    pre.language = attrs["class"][len("language-") :]
+                except KeyError:
+                    pass
+            except KeyError:
+                EntityType = MessageEntityCode
+        elif tag == "pre":
+            EntityType = MessageEntityPre
+            args["language"] = ""
+        elif tag == "a":
+            try:
+                url = attrs["href"]
+            except KeyError:
+                return
+            if url.startswith("mailto:"):
+                url = url[len("mailto:") :]
+                EntityType = MessageEntityEmail
+            else:
+                if self.get_starttag_text() == url:
+                    EntityType = MessageEntityUrl
+                else:
+                    EntityType = MessageEntityTextUrl
+                    args["url"] = del_surrogate(url)
+                    url = None
+            self._open_tags_meta.popleft()
+            self._open_tags_meta.appendleft(url)
+        elif tag == "emoji":
+            EntityType = MessageEntityCustomEmoji
+            args["document_id"] = int(attrs["document_id"])
+
+        if EntityType and tag not in self._building_entities:
+            self._building_entities[tag] = EntityType(
+                offset=len(self.text),
+                length=0,
+                **args,
+            )

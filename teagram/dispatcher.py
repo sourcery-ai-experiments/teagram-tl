@@ -20,6 +20,7 @@ from typing import Union
 from telethon.tl.custom import Message
 
 from . import loader, utils
+from .types import HTMLParser
 
 import traceback
 
@@ -58,7 +59,40 @@ class DispatcherManager:
         self.app.add_event_handler(self._handle_message, MessageEdited)
         return True
 
+    async def prepare_message(self, message: types.Message) -> types.Message:
+        message_edit = message.edit
+        message_reply = message.reply
+        message_respond = message.respond
+
+        async def edit(*args, **kwargs):
+            parse_mode = kwargs.get("parse_mode", "")
+            if not parse_mode or parse_mode.lower() == "html":
+                kwargs["parse_mode"] = HTMLParser
+
+            return await message_edit(*args, **kwargs)
+
+        async def reply(*args, **kwargs):
+            parse_mode = kwargs.get("parse_mode", "")
+            if not parse_mode or parse_mode.lower() == "html":
+                kwargs["parse_mode"] = HTMLParser
+
+            return await message_reply(*args, **kwargs)
+
+        async def respond(*args, **kwargs):
+            parse_mode = kwargs.get("parse_mode", "")
+            if not parse_mode or parse_mode.lower() == "html":
+                kwargs["parse_mode"] = HTMLParser
+
+            return await message_respond(*args, **kwargs)
+
+        message.edit = edit
+        message.reply = reply
+        message.respond = respond
+
+        return message
+
     async def _handle_message(self, message: types.Message) -> types.Message:
+        message = self.prepare_message(message)
         await self._handle_watchers(message)
 
         prefix, command, args = utils.get_full_command(message)

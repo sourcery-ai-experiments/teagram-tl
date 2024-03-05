@@ -46,6 +46,7 @@ from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl import custom
 
 from . import database, init_time
+from .types import HTMLParser
 
 Message = Union[custom.Message, types.Message]
 _init_time = init_time
@@ -459,9 +460,12 @@ async def answer(
     :param parse_mode: Markdown/HTML
     :return: `Message`
     """
-    client: TelegramClient = message._client
+    client = message._client
     chat = get_chat(message)
     reply_to = get_topic(message) if topic else message.id
+
+    if parse_mode.lower() == "html":
+        parse_mode = HTMLParser
 
     if isinstance(message, list):
         message: Message = message[0]
