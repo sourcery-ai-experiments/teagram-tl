@@ -59,7 +59,7 @@ BASE_PATH = Path(BASE_DIR)
 supress = contextlib.suppress
 
 try:
-    subprocess.run(["lsb_release"])
+    subprocess.run(["lsb_release"], capture_output=False, text=False)
 except FileNotFoundError:
     lsb_release_exists = False
     import traceback
