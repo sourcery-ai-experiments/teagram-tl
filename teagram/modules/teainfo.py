@@ -57,7 +57,7 @@ class InfoMod(loader.Module):
         )
         git_version = f'<a href="https://github.com/itzlayz/teagram-tl/commit/{last}">{last[:7]}</a>'
 
-        me = self.manager.me.username if message.sender else "Anonymous"
+        me = self.manager.me.username if message.from_id else "Anonymous"
 
         default = f"""
 <b><emoji document_id=5433758796289685818>👑</emoji> {self.strings('owner')}</b>:  <code>{me}</code>
