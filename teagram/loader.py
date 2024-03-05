@@ -589,7 +589,6 @@ class ModulesManager:
                         "-m",
                         "pip",
                         "install",
-                        "--user",
                         requirements[0][-1],
                     ]
                 )

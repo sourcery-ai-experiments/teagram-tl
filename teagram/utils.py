@@ -88,7 +88,17 @@ def get_args(message: Message) -> str:
 
 
 def get_args_raw(message: Message) -> str:
-    return get_full_command(message)[2]
+    if not (message := getattr(message, "message", message)):
+        return False
+
+    if not isinstance(message, str):
+        message = getattr(message, "message", "")
+
+    args = message.split(maxsplit=1)
+    if len(args) > 1:
+        return args[1]
+
+    return ""
 
 
 def get_full_command(

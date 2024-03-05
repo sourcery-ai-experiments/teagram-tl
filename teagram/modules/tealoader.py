@@ -263,6 +263,9 @@ class LoaderMod(loader.Module):
         except requests.exceptions.MissingSchema:
             await utils.answer(message, self.strings["wrongurl"])
         except Exception as error:
+            import traceback
+
+            traceback.print_exc()
             await utils.answer(message, f"❌ <code>{error}</code>")
 
     async def loadmod_cmd(self, message: Message):

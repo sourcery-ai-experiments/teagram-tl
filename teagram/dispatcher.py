@@ -115,7 +115,7 @@ class DispatcherManager:
 
         try:
             if len(vars_ := getfullargspec(func).args) > 2 and vars_[2] == "args":
-                await func(message, utils.get_full_command(message)[2])
+                await func(message, utils.get_args_raw(message))
             else:
                 await func(message)
         except Exception:
