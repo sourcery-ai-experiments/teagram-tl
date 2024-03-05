@@ -19,6 +19,7 @@ from datetime import timedelta
 from telethon import types, TelegramClient
 
 from .. import loader, utils
+from ..logger import TeagramLogs
 
 log = logging.getLogger()
 
@@ -38,7 +39,14 @@ class SettingsMod(loader.Module):
     )
 
     async def on_load(self):
-        self._logger = log.handlers[0]
+        self._logger = None
+        for handler in log.handlers:
+            if isinstance(handler, TeagramLogs):
+                self._logger = handler
+                break
+
+        if not self._logger:
+            logging.error("Teagram logging handler not found")
 
     async def logs_cmd(self, message: types.Message, args: str):
         """Отправляет логи. Использование: logs <уровень>"""
