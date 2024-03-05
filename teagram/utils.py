@@ -12,7 +12,9 @@
 import asyncio
 import functools
 import random
+
 import requests
+import logging
 import string
 import typing
 import yaml
@@ -62,12 +64,11 @@ lsb_release_exists = False
 try:
     subprocess.run(["lsb_release"], capture_output=True, text=False)
 except FileNotFoundError:
-
-    import traceback
-    traceback.print_exc("Not found lsb_release in your system. Please, install it in your favourite package manager.")
+    logging.warning(
+        "Not found lsb_release in your system. Please, install it in your favourite package manager."
+    )
 else:
     lsb_release_exists = True
-
 
 
 def git_hash():
@@ -753,8 +754,8 @@ def get_distro() -> str:
         pattern = r"Description:\s+(.+)"
         if match := re.search(pattern, info):
             return match.group(1)
-        else:
-            return
+
+    return ""
 
 
 def rnd_device() -> str:
