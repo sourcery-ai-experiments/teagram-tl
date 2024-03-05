@@ -12,7 +12,6 @@
 import telethon
 import time
 
-from .teaterminal import bash_exec
 from .. import __version__, loader, utils, validators
 from ..types import Config, ConfigValue
 from ..bot import BotManager
@@ -52,18 +51,13 @@ class InfoMod(loader.Module):
         uptime = timedelta(seconds=round(time.time() - utils._init_time))
 
         last = utils.git_hash()
-        now = str(await bash_exec("git rev-parse HEAD")).strip()
+        now = str(await utils.bash_exec("git rev-parse HEAD")).strip()
         version = f"v{__version__}" + (
             " " + self.strings("update") if last != now else ""
         )
         git_version = f'<a href="https://github.com/itzlayz/teagram-tl/commit/{last}">{last[:7]}</a>'
 
-        me = (
-            self.manager.me.username
-            if message.sender
-            else "Anonymous"
-        )
-
+        me = self.manager.me.username if message.sender else "Anonymous"
 
         default = f"""
 <b><emoji document_id=5433758796289685818>👑</emoji> {self.strings('owner')}</b>:  <code>{me}</code>
@@ -79,7 +73,6 @@ class InfoMod(loader.Module):
         """
 
         custom = self.config.get("customText")
-
 
         if custom:
             custom = custom.format(

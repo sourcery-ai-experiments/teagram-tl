@@ -50,6 +50,8 @@ from telethon.tl import custom
 from . import database, init_time
 from .types import HTMLParser
 
+from asyncio import Process
+
 Message = Union[custom.Message, types.Message]
 _init_time = init_time
 BASE_DIR = (
@@ -766,6 +768,29 @@ def rnd_device() -> str:
         words = file.read().split()
 
     return " ".join(random.choice(words) for _ in range(3)).title()
+
+
+async def bash_exec(command: Union[bytes, str]) -> Process:
+    """
+    Async terminal execute
+    """
+    a = await asyncio.create_subprocess_shell(
+        command.strip(),
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    if not (out := await a.stdout.read(-1)):
+        try:
+            return (await a.stderr.read(-1)).decode()
+        except UnicodeDecodeError:
+            return f"Unicode decode error: {(await a.stderr.read(-1))}"
+    else:
+        try:
+            return out.decode()
+        except UnicodeDecodeError:
+            return f"Unicode decode error: {out}"
 
 
 rand = random_id
