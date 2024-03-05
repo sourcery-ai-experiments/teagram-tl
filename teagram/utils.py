@@ -50,8 +50,6 @@ from telethon.tl import custom
 from . import database, init_time
 from .types import HTMLParser
 
-from asyncio import Process
-
 Message = Union[custom.Message, types.Message]
 _init_time = init_time
 BASE_DIR = (
@@ -770,7 +768,7 @@ def rnd_device() -> str:
     return " ".join(random.choice(words) for _ in range(3)).title()
 
 
-async def bash_exec(command: Union[bytes, str]) -> Process:
+async def bash_exec(command: Union[bytes, str]):
     """
     Async terminal execute
     """
