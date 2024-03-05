@@ -10,12 +10,14 @@
 #                                 https://creativecommons.org/licenses/by-nc/4.0/
 
 import asyncio
+from asyncio import Process
+from typing import Union
 
 from telethon import types
 from .. import loader, utils
 
 
-async def bash_exec(command):
+async def bash_exec(command: Union[bytes, str]) -> Process:
     a = await asyncio.create_subprocess_shell(
         command.strip(),
         stdin=asyncio.subprocess.PIPE,
