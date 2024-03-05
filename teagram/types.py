@@ -282,6 +282,8 @@ class CustomHTMLParser(HTMLToTelegramParser):  # noqa: F811
 
 def parse(html: str) -> Tuple[str, List[TypeMessageEntity]]:
     """
+    EDITED `telethon.extensions.html.parse`
+
     Parses the given HTML message and returns its stripped representation
     plus a list of the MessageEntity's that were found.
 

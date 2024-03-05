@@ -115,14 +115,14 @@ class Main:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.bind(("localhost", port))
 
-            try:
-                check_port(port)
-            except OSError as e:
-                if e.errno == 98:
-                    logger.error("Port is busy, generating new one")
-                    port = None
-
-            if not port:
+            if port:
+                try:
+                    check_port(port)
+                except OSError as e:
+                    if e.errno == 98:
+                        logger.error("Port is busy, generating new one")
+                        port = None
+            else:
                 from random import randint
 
                 port = randint(1000, 65535)

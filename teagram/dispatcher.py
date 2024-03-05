@@ -10,10 +10,9 @@
 #                                 https://creativecommons.org/licenses/by-nc/4.0/
 
 import logging
+
 from inspect import getfullargspec, iscoroutine
 from types import FunctionType
-
-from .types import HTMLParser
 
 from telethon import TelegramClient, types
 from telethon.events import NewMessage, MessageEdited
@@ -22,6 +21,7 @@ from typing import Union
 from telethon.tl.custom import Message
 
 from . import loader, utils
+from .types import HTMLParser
 
 import traceback
 
