@@ -53,7 +53,7 @@ class TeagramLogs(logging.StreamHandler):
             }
 
             await self.client.inline_bot.send_message(
-                self.client.logchat,
+                await self.client.logchat,
                 f"{emojis[record.levelname]}:\n" f"<code>{self.format(record)}</code>",
                 parse_mode="html",
             )
