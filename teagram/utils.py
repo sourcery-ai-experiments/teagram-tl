@@ -130,8 +130,6 @@ def get_full_command(
 
     Example:
     .. code-block:: python
-        message_text = "/command arg1 arg2"
-        message = Message(text=message_text)
         result = get_full_command(message)
 
     Result also can be if you didn't set prefix:  ("", "command", "arg1 arg2")
@@ -139,15 +137,17 @@ def get_full_command(
     """
 
     message.text = str(message.text)
+    message.raw_text = str(message.raw_text)
+
     prefixes = database.db.get("teagram.loader", "prefixes", ["."])
 
     for prefix in prefixes:
         if (
             message.text
             and len(message.text) > len(prefix)
-            and message.text.startswith(prefix)
+            and message.raw_text.startswith(prefix)
         ):
-            command, *args = message.text[len(prefix) :].split(maxsplit=1)
+            command, *args = message.raw_text[len(prefix) :].split(maxsplit=1)
             break
     else:
         return "", "", ""
