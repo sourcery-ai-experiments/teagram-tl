@@ -32,15 +32,16 @@
     <label for="password">2FA password:</label>
     <input type="password" id="password" name="password">
 
-    <input type="submit" id="enter" value="Войти">
+    <input type="submit" id="enter" value="Login">
     <button id="theme-toggle">Toggle Dark Theme</button>
 
     <div class="notification-container" id="notification-container"></div>
     <div class="notification-container-err" id="notification-container-err"></div>
     <div class="modal-container" id="modal-container"></div>
 
-    <button id="show-modal" style="visibility: hidden;">Show QR</button>
-    <div id="qr_placeholder"></div>
+    <br>
+    <input type="submit" id="show-modal" value="QR dialog" style="visibility: hidden;">
+    <input type="submit" id="show-phone" value="Phone dialog" style="visibility: hidden;">
   </div>
 
   <script src="static/script.js"></script>

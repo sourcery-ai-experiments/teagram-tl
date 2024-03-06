@@ -51,7 +51,7 @@ api.mount("/static", StaticFiles(directory="teagram/web/static"), "static")
 
 class MainWeb:
     def __init__(self):
-        self.config = Config(api, host="0.0.0.0", port=self.port, log_level=60)
+        self.config = Config(api, host="0.0.0.0", port=self.port)
 
         self.server = Server(self.config)
         self.login_data = {
@@ -66,9 +66,13 @@ class MainWeb:
         self.client = None
 
         api.add_route("/", self.index, methods=["GET"])
-        api.add_route("/tokens", self.loginToClient, methods=["POST"])
+        api.add_route("/phone_request", self.send_phone_request, methods=["POST"])
+        api.add_route("/enter_code", self.enter_code, methods=["POST"])
+
         api.add_route("/qrcode", self.qrcode, methods=["GET"])
         api.add_route("/checkqr", self.checkqr, methods=["GET"])
+
+        api.add_route("/tokens", self.loginToClient, methods=["POST"])
         api.add_route("/twofa", self._2fa, methods=["POST"])
 
         api.add_event_handler("startup", self.proxy)
@@ -96,7 +100,7 @@ class MainWeb:
             if await self.client.get_me():
                 self._shutdown()
             else:
-                return Response(content="qrcode")
+                return Response(content="dialog")
         except Exception as error:
             self.logger.exception(error)
             return Response(str(error))
@@ -175,3 +179,53 @@ class MainWeb:
     def _shutdown(self):
         shutdown(self.port)
         asyncio.get_running_loop().stop()
+
+    async def send_phone_request(self, data: Request):
+        data = await data.json()
+        phone_number = data.get("phone", None)
+
+        if not phone_number:
+            return Response("enter_phone_number")
+
+        self.phone_hash = (
+            phone_number,
+            (
+                await self.client.send_code_request(phone_number, _retry_count=5)
+            ).phone_code_hash,
+        )
+
+        return Response("enter_code")
+
+    async def enter_code(self, data: Request):
+        data = await data.json()
+        code = data.get("code", None)
+        twofa = data.get("twofa", None)
+        if not code:
+            return Response("enter_phone_number")
+
+        if not getattr(self, "phone_hash", None):
+            return Response("no_phone_hash")
+
+        phone_number = self.phone_hash[0]
+        phone_hash = self.phone_hash[1]
+        try:
+            user = await self.client.sign_in(
+                phone_number, code, phone_code_hash=phone_hash
+            )
+            if user:
+                self._shutdown()
+                return
+
+            return Response("invalid_phone_code")
+        except errors.SessionPasswordNeededError:
+            if not twofa:
+                return Response("no_twofa")
+
+            user = await self.client.sign_in(
+                phone_number, code, password=twofa, phone_code_hash=phone_hash
+            )
+            if user:
+                self._shutdown()
+                return
+
+            return Response("invalid_twofa")

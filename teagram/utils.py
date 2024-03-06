@@ -703,7 +703,7 @@ def get_platform() -> str:
     elif IS_CODESPACES:
         return "👨‍💻 Github Codespaces"
     elif IS_JAMHOST:
-        return "🧃 JamHost"
+        return "<emoji document_id=5422884965593397853>🧃</emoji> JamHost"
     else:
         return "🖥️ VDS"
 
