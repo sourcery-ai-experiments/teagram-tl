@@ -143,8 +143,8 @@ def get_full_command(
 
     for prefix in prefixes:
         if (
-            message.text
-            and len(message.text) > len(prefix)
+            message.raw_text
+            and len(message.raw_text) > len(prefix)
             and message.raw_text.startswith(prefix)
         ):
             command, *args = message.raw_text[len(prefix) :].split(maxsplit=1)
