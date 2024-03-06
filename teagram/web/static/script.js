@@ -178,7 +178,6 @@ document.getElementById("enter").onclick = async () => {
 
     try {
       const data = await post('tokens', headers);
-      console.log("data is ", data)
 
       if (!data || data == null) {
         showNotification('Success', 'You are successfully logged, wait for inline bot!');
