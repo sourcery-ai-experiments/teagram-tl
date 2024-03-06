@@ -96,4 +96,4 @@ class DumpMod(loader.Module):
             with open(PATH, "w") as f:
                 json.dump(data, f, indent=4)
 
-            logger.info(f"Dump file created, {PATH}") # need to defuse this string.
+            logger.info(f"Dump file created, {PATH}")
