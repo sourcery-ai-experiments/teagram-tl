@@ -51,7 +51,7 @@ api.mount("/static", StaticFiles(directory="teagram/web/static"), "static")
 
 class MainWeb:
     def __init__(self):
-        self.config = Config(api, host="0.0.0.0", port=self.port)
+        self.config = Config(api, host="0.0.0.0", port=self.port, log_level=60)
 
         self.server = Server(self.config)
         self.login_data = {
