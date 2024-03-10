@@ -254,6 +254,8 @@ async function send_phone() {
 
   const response = await post_body("phone_request", JSON.stringify(body));
   showNotification("Enter code", "Enter code from telegram")
+
+  phone_request_status = true;
 }
 
 async function send_code() {
