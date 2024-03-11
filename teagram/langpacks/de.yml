@@ -1,3 +1,14 @@
+#                            ██╗████████╗███████╗██╗░░░░░░█████╗░██╗░░░██╗███████╗
+#                            ██║╚══██╔══╝╚════██║██║░░░░░██╔══██╗╚██╗░██╔╝╚════██║
+#                            ██║░░░██║░░░░░███╔═╝██║░░░░░███████║░╚████╔╝░░░███╔═╝
+#                            ██║░░░██║░░░██╔══╝░░██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░
+#                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
+#                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
+#                                            https://t.me/itzlayz
+#
+#                                    🔒 Licensed under the СС-by-NC
+#                                 https://creativecommons.org/licenses/by-nc/4.0/
+
 help:
   no: "<b>Keine Hilfe verfügbar</b>"
   nomd: "<b>Keine Beschreibung für Befehl vorhanden</b>"
@@ -42,6 +53,8 @@ loader:
   wrongmod: '❌ <b>Sie haben das falsche Modul angegeben</b>'
   replymod: '⚙ <b>Modul <code>{}</code></b>'
   replytoload: '📁 <b>Um ein Modul zu installieren, schreiben Sie <code>{}loadmod</code> als Reply auf diese Nachricht</b>'
+  accept: "✅ Modul laden"
+  decline: "❌ Modul nicht laden"
 
 translator:
   notext: '❌ <b>Kein Text angegeben</b>'
@@ -92,7 +105,7 @@ terminal:
   output: "Output"
 
 Backuper:
-  attemp: '<b>👀 Versuch eines Backups...</b>'
+  attempt: '<b>👀 Versuch eines Backups...</b>'
   done: "<b>✅ Erfolgreiches Backup</b>"
   error: "<b>🚫 Fehler, überprüfen Sie die Logs</b>"
 
@@ -127,6 +140,8 @@ settings:
   nouser: "<b>❔ Benutzer nicht gefunden</b>"
   user: "<b>Benutzer:</b>"
   chbot: "<b>✔ Du hast den Inline-Bot erfolgreich geändert!\nBitte starte den Bot neu, um die Änderungen zu übernehmen (<code>{}</code>)</b>"
+  iname_ch: "<b>Sie haben erfolgreich den Namen des Bots von <code>{last}</code> auf <code>{cur}</code> geändert</b>"
+  noargs: "❌ <b>Keine Argumente</b>"
 
 dump:
   dumped: "Dump erstellt"

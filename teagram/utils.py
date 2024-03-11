@@ -5,14 +5,16 @@
 #                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
 #                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
 #                                            https://t.me/itzlayz
-#                           
-#                                    🔒 Licensed under the GNU AGPLv3
-#                                 https://www.gnu.org/licenses/agpl-3.0.html
+#
+#                                    🔒 Licensed under the СС-by-NC
+#                                 https://creativecommons.org/licenses/by-nc/4.0/
 
 import asyncio
 import functools
 import random
+
 import requests
+import logging
 import string
 import typing
 import yaml
@@ -29,28 +31,24 @@ import contextlib
 from types import FunctionType
 from urllib.parse import urlparse
 from typing import Any, List, Literal, Tuple, Union
-from telethon import (
-    TelegramClient, 
-    types, 
-    events, 
-    hints
-)
+from telethon import TelegramClient, types, events, hints
 from telethon.tl.functions.channels import (
     CreateChannelRequest,
     InviteToChannelRequest,
     EditAdminRequest,
-    EditPhotoRequest
+    EditPhotoRequest,
 )
 from telethon.types import (
     Channel,
     ChatAdminRights,
     InputPeerNotifySettings,
-    UpdateNewChannelMessage
+    UpdateNewChannelMessage,
 )
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl import custom
 
 from . import database, init_time
+from .types import HTMLParser
 
 Message = Union[custom.Message, types.Message]
 _init_time = init_time
@@ -62,8 +60,20 @@ BASE_DIR = (
 BASE_PATH = Path(BASE_DIR)
 supress = contextlib.suppress
 
+lsb_release_exists = False
+try:
+    subprocess.run(["lsb_release"], capture_output=True, text=False)
+except FileNotFoundError:
+    logging.warning(
+        "Not found lsb_release in your system. Please, install it in your favourite package manager."
+    )
+else:
+    lsb_release_exists = True
+
+
 def git_hash():
     return git.Repo().head.commit.hexsha
+
 
 # from hikka
 def escape_html(text: str, /) -> str:  # sourcery skip
@@ -73,6 +83,7 @@ def escape_html(text: str, /) -> str:  # sourcery skip
     :return: Escaped text
     """
     return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
 
 # from hikka
 def escape_quotes(text: str, /) -> str:
@@ -87,13 +98,24 @@ def escape_quotes(text: str, /) -> str:
 def get_args(message: Message) -> str:
     return get_full_command(message)
 
+
 def get_args_raw(message: Message) -> str:
-    return get_full_command(message)[2]
+    if not (message := getattr(message, "message", message)):
+        return False
+
+    if not isinstance(message, str):
+        message = getattr(message, "message", "")
+
+    args = message.split(maxsplit=1)
+    if len(args) > 1:
+        return args[1]
+
+    return ""
 
 
-def get_full_command(message: Message) -> Union[
-    Tuple[Literal[""], Literal[""], Literal[""]], Tuple[str, str, str]
-]:
+def get_full_command(
+    message: Message,
+) -> Union[Tuple[Literal[""], Literal[""], Literal[""]], Tuple[str, str, str]]:
     """
     Extract a tuple of prefix, command, and arguments from the message.
 
@@ -108,8 +130,6 @@ def get_full_command(message: Message) -> Union[
 
     Example:
     .. code-block:: python
-        message_text = "/command arg1 arg2"
-        message = Message(text=message_text)
         result = get_full_command(message)
 
     Result also can be if you didn't set prefix:  ("", "command", "arg1 arg2")
@@ -117,20 +137,23 @@ def get_full_command(message: Message) -> Union[
     """
 
     message.text = str(message.text)
+    message.raw_text = str(message.raw_text)
+
     prefixes = database.db.get("teagram.loader", "prefixes", ["."])
 
     for prefix in prefixes:
         if (
-            message.text
-            and len(message.text) > len(prefix)
-            and message.text.startswith(prefix)
+            message.raw_text
+            and len(message.raw_text) > len(prefix)
+            and message.raw_text.startswith(prefix)
         ):
-            command, *args = message.text[len(prefix):].split(maxsplit=1)
+            command, *args = message.raw_text[len(prefix) :].split(maxsplit=1)
             break
     else:
         return "", "", ""
 
     return prefixes[0], command.lower(), args[-1] if args else ""
+
 
 def sublist(_list: list, row_length: int = 3) -> list:
     """
@@ -138,7 +161,8 @@ def sublist(_list: list, row_length: int = 3) -> list:
     :param _list: `typing.List`
     :return: List with sublist
     """
-    return [_list[i:i + row_length] for i in range(0, len(_list), row_length)]
+    return [_list[i : i + row_length] for i in range(0, len(_list), row_length)]
+
 
 def get_chat(message: Message) -> typing.Optional[int]:
     """
@@ -146,7 +170,8 @@ def get_chat(message: Message) -> typing.Optional[int]:
     :param message: Message to get chat of
     :return: int or None if not present
     """
-    return (message.chat.id if message.chat else None or message._chat_peer)
+    return message.chat.id if message.chat else None or message._chat_peer
+
 
 def get_chat_id(message: Message) -> typing.Optional[int]:
     """
@@ -154,6 +179,7 @@ def get_chat_id(message: Message) -> typing.Optional[int]:
     """
 
     return get_chat(message)
+
 
 def get_topic(message: Message) -> typing.Optional[int]:
     """
@@ -173,6 +199,7 @@ def get_topic(message: Message) -> typing.Optional[int]:
         else None
     )
 
+
 def strtobool(val):
     # distutils.util.strtobool
     """Convert a string representation of truth to true (1) or false (0).
@@ -182,13 +209,14 @@ def strtobool(val):
     'val' is anything else.
     """
     val = val.lower()
-    if val in ('y', 'yes', 't', 'true', 'on', '1'):
+    if val in ("y", "yes", "t", "true", "on", "1"):
         return 1
-    elif val in ('n', 'no', 'f', 'false', 'off', '0'):
+    elif val in ("n", "no", "f", "false", "off", "0"):
         return 0
     else:
         raise ValueError("invalid truth value %r" % (val,))
-    
+
+
 def validate(attribute):
     """Validation type from string (in int, bool)"""
     if isinstance(attribute, str):
@@ -202,36 +230,36 @@ def validate(attribute):
 
     return attribute
 
+
 def disable_task_error(task: asyncio.Task) -> None:
     def pass_exc(task: asyncio.Task):
         try:
             task.cancel()
         except Exception:
             pass
-        
-    task.add_done_callback(
-        functools.partial(pass_exc)
-    )
+
+    task.add_done_callback(functools.partial(pass_exc))
+
 
 # https://github.com/hikariatama/Hikka/blob/master/hikka/_internal.py#L16-L17
 async def fw_protect():
     await asyncio.sleep(random.randint(1000, 3000) / 1000)
+
 
 async def create_group(
     app: TelegramClient,
     title: str,
     description: str,
     megagroup: bool = False,
-    broadcast: bool = False
+    broadcast: bool = False,
 ):
     await fw_protect()
     return await app(
         CreateChannelRequest(
-            title, description, 
-            megagroup=megagroup, 
-            broadcast=broadcast
+            title, description, megagroup=megagroup, broadcast=broadcast
         )
     )
+
 
 async def invite_inline_bot(
     client: TelegramClient,
@@ -260,6 +288,7 @@ async def invite_inline_bot(
             )
         )
 
+
 async def asset_channel(
     client: TelegramClient,
     title: str,
@@ -270,7 +299,7 @@ async def asset_channel(
     archive: bool = False,
     invite_bot: bool = False,
     avatar: typing.Optional[str] = None,
-    _folder = None
+    _folder=None,
 ) -> typing.Tuple[Channel, bool]:
     """
     Create new channel (if needed) and return its entity
@@ -338,6 +367,7 @@ async def asset_channel(
     client._channels_cache[title] = {"peer": peer, "exp": int(time.time())}
     return peer, True
 
+
 async def dnd(
     client: TelegramClient,
     peer: hints.Entity,
@@ -369,6 +399,7 @@ async def dnd(
 
     return True
 
+
 def check_url(url: str) -> bool:
     """
     Statically checks url for validity
@@ -379,6 +410,7 @@ def check_url(url: str) -> bool:
         return bool(urlparse(url).netloc)
     except Exception:
         return False
+
 
 async def set_avatar(
     client: TelegramClient,
@@ -427,15 +459,16 @@ async def set_avatar(
         )
     return True
 
+
 async def answer(
     message: Union[Message, List[Message]],
     response: Union[str, Any],
     photo: bool = False,
     document: bool = False,
     topic: bool = False,
-    caption: str = '',
-    parse_mode: str = 'html',
-    **kwargs
+    caption: str = "",
+    parse_mode: str = "HTML",
+    **kwargs,
 ) -> Message:
     """
     Send a response to a message, with optional photo or document attachment.
@@ -443,14 +476,18 @@ async def answer(
     :param message: Message or list with message
     :param response: Text in message
     :param photo: Send photo (bool)
-    :param document: Send document (bool) 
-    :param topic: Send in topic (bool) 
+    :param document: Send document (bool)
+    :param topic: Send in topic (bool)
     :param caption: Text under doc/photo
-    :param parse_mode: Markdown/HTML 
-    :return: `Message` 
+    :param parse_mode: Markdown/HTML
+    :return: `Message`
     """
-    client: TelegramClient = message._client
+    client = message._client
     chat = get_chat(message)
+    reply_to = get_topic(message) if topic else message.id
+
+    if parse_mode.lower() == "html":
+        parse_mode = HTMLParser
 
     if isinstance(message, list):
         message: Message = message[0]
@@ -458,15 +495,15 @@ async def answer(
     if isinstance(response, str) and not photo and not document:
         if len(response) > 4096:
             file = io.BytesIO(response.encode())
-            file.name = 'response.txt'
+            file.name = "response.txt"
 
             msg = await client.send_file(
-                chat, 
+                chat,
                 file,
-                caption=f'📁 <b>Сообщение отправлено файлом</b> (<code>{len(response)}/4096</code>)',
-                parse_mode='HTML',
-                reply_to=(get_topic(message) if topic else message.id),
-                **kwargs
+                caption=f"📁 <b>Сообщение отправлено файлом</b> (<code>{len(response)}/4096</code>)",
+                parse_mode="HTML",
+                reply_to=reply_to,
+                **kwargs,
             )
 
             if message.out:
@@ -475,28 +512,24 @@ async def answer(
         else:
             try:
                 msg = await client.edit_message(
-                    chat,
-                    message.id,
+                    chat, message.id, response, parse_mode=parse_mode, **kwargs
+                )
+            except:  # noqa: E722
+                msg = await message.reply(
                     response,
                     parse_mode=parse_mode,
-                    **kwargs
-                )
-            except:   # noqa: E722
-                msg = await message.reply(
-                    response, 
-                    parse_mode=parse_mode, 
-                    reply_to=(get_topic(message) if topic else message.id), 
-                    **kwargs
+                    reply_to=reply_to,
+                    **kwargs,
                 )
 
-    if photo or document:       
+    if photo or document:
         msg = await client.send_file(
-            chat, 
+            chat,
             response,
             caption=caption,
             parse_mode=parse_mode,
-            reply_to=(get_topic(message) if topic else message.id),
-            **kwargs
+            reply_to=reply_to,
+            **kwargs,
         )
 
         if message.out:
@@ -504,11 +537,8 @@ async def answer(
 
     return msg
 
-async def invoke_inline(
-    message: Message,
-    bot_username: str,
-    inline_id: str
-):
+
+async def invoke_inline(message: Message, bot_username: str, inline_id: str):
     """
     Invoke an inline query to a bot.
 
@@ -524,9 +554,9 @@ async def invoke_inline(
     query: custom.InlineResults = await client.inline_query(bot_username, inline_id)
 
     return await query[0].click(
-        get_chat(message),
-        reply_to=message.reply_to_msg_id or None
+        get_chat(message), reply_to=message.reply_to_msg_id or None
     )
+
 
 # https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L879C1-L886C63
 def chunks(_list: typing.List, n: int, /) -> typing.List[typing.List[typing.Any]]:
@@ -542,6 +572,7 @@ def chunks(_list: typing.List, n: int, /) -> typing.List[typing.List[typing.Any]
     >>> [[1, 2], [3, 4], [5, 6]]
     """
     return [_list[i : i + n] for i in range(0, len(_list), n)]
+
 
 # https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L862-L876
 def get_link(user: typing.Union[types.User, types.Channel], /) -> str:
@@ -559,6 +590,7 @@ def get_link(user: typing.Union[types.User, types.Channel], /) -> str:
             else ""
         )
     )
+
 
 def run_sync(func: FunctionType, *args, **kwargs) -> asyncio.Future:
     """
@@ -582,9 +614,9 @@ def run_sync(func: FunctionType, *args, **kwargs) -> asyncio.Future:
     """
 
     return asyncio.get_event_loop().run_in_executor(
-        None, functools.partial(
-            func, *args, **kwargs)
+        None, functools.partial(func, *args, **kwargs)
     )
+
 
 def get_ram() -> float:
     """
@@ -593,9 +625,10 @@ def get_ram() -> float:
     Returns:
         float: Memory usage in megabytes.
     """
-    
+
     try:
         import psutil
+
         process = psutil.Process(os.getpid())
         mem = process.memory_info()[0] / 2.0**20
         for child in process.children(recursive=True):
@@ -603,6 +636,7 @@ def get_ram() -> float:
         return round(mem, 1)
     except:  # noqa: E722
         return 0
+
 
 def get_cpu() -> float:
     """
@@ -624,7 +658,8 @@ def get_cpu() -> float:
         return cpu
     except:  # noqa: E722
         return 0
-    
+
+
 def get_display_name(entity: Union[types.User, types.Chat]) -> str:
     """
     Get display name of user or chat.
@@ -637,6 +672,7 @@ def get_display_name(entity: Union[types.User, types.Chat]) -> str:
         or entity.first_name
         or ("" + (f" {entity.last_name}" if entity.last_name else ""))
     )
+
 
 def get_platform() -> str:
     """
@@ -651,8 +687,8 @@ def get_platform() -> str:
     IS_DOCKER = "DOCKER" in os.environ
     IS_GOORM = "GOORM" in os.environ
     IS_WIN = "WINDIR" in os.environ
-    IS_ZACHOST = 'zachemhost' in os.environ
-    IS_WSL = 'WSL_DISTRO_NAME' in os.environ
+    IS_WSL = "WSL_DISTRO_NAME" in os.environ
+    IS_JAMHOST = "JAMHOST" in os.environ
 
     if IS_TERMUX:
         return "📱 Termux"
@@ -663,13 +699,14 @@ def get_platform() -> str:
     elif IS_WSL:
         return "🧱 WSL"
     elif IS_WIN:
-        return "💻 Windows"
+        return "<emoji document_id=5866334008123591985>💻</emoji> Windows"
     elif IS_CODESPACES:
         return "👨‍💻 Github Codespaces"
-    elif IS_ZACHOST:
-        return "❔ Zachem㉿Host"
+    elif IS_JAMHOST:
+        return "<emoji document_id=5422884965593397853>🧃</emoji> JamHost"
     else:
         return "🖥️ VDS"
+
 
 def random_id(length: int = 10) -> str:
     """
@@ -683,8 +720,7 @@ def random_id(length: int = 10) -> str:
     """
 
     return "".join(
-        random.choice(string.ascii_letters + string.digits)
-        for _ in range(length)
+        random.choice(string.ascii_letters + string.digits) for _ in range(length)
     )
 
 
@@ -695,31 +731,68 @@ def get_langpack() -> Any:
     Returns:
         Any: The language pack.
     """
-    if not (lang := database.db.get('teagram.loader', 'lang', '')):
-        database.db.set('teagram.loader', 'lang', 'en')
+    if not (lang := database.db.get("teagram.loader", "lang", "")):
+        database.db.set("teagram.loader", "lang", "en")
 
         get_langpack()
     else:
-        with open(f'teagram/langpacks/{lang}.yml', encoding='utf-8') as file:
+        with open(f"teagram/langpacks/{lang}.yml", encoding="utf-8") as file:
             pack = yaml.safe_load(file)
 
         return pack
 
+
 def get_distro() -> str:
-    '''
+    """
     Get linux distribution.
 
     Returns:
         str: Information about linux distro.
-    '''
+    """
+    if lsb_release_exists:
+        result = subprocess.run(["lsb_release", "-a"], capture_output=True, text=True)
 
-    result = subprocess.run(["lsb_release","-a"], capture_output=True, text=True)
-    info = result.stdout
+        info = result.stdout
 
-    pattern = r'Description:\s+(.+)'
-    if match := re.search(pattern, info):
-        return match.group(1)
+        pattern = r"Description:\s+(.+)"
+        if match := re.search(pattern, info):
+            return match.group(1)
+
+    return ""
+
+
+def rnd_device() -> str:
+    """
+    :return: Random device
+    """
+    with open("assets/lorem_ipsum.txt") as file:
+        words = file.read().split()
+
+    return " ".join(random.choice(words) for _ in range(3)).title()
+
+
+async def bash_exec(command: Union[bytes, str]):
+    """
+    Async terminal execute
+    """
+    a = await asyncio.create_subprocess_shell(
+        command.strip(),
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    if not (out := await a.stdout.read(-1)):
+        try:
+            return (await a.stderr.read(-1)).decode()
+        except UnicodeDecodeError:
+            return f"Unicode decode error: {(await a.stderr.read(-1))}"
     else:
-        return
+        try:
+            return out.decode()
+        except UnicodeDecodeError:
+            return f"Unicode decode error: {out}"
+
 
 rand = random_id
+get_named_platform = get_platform

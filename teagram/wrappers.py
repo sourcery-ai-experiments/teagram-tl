@@ -5,17 +5,16 @@ from inspect import iscoroutinefunction
 from types import ModuleType
 from typing import Callable
 
+
 def wrap_function_to_async(function: Callable) -> Callable:
     """Wraps sync function to async"""
-
-    assert (not iscoroutinefunction(function)), "Function is async"
-    assert (not iscoroutine(function)), "Waiting for function, got coroutine."
+    assert not iscoroutinefunction(function), "Function is async"
+    assert not iscoroutine(function), "Waiting for function, got coroutine."
 
     pool = ThreadPoolExecutor()
 
     @_wraps(function)
     def wrapped(*args, **kwargs):
-
         future = pool.submit(function, *args, **kwargs)
         return wrap_future(future)
 
@@ -27,7 +26,11 @@ class WrapModuleToAsync:
         for attr in dir(mod):
             item = getattr(mod, attr)
 
-            if callable(item) and not iscoroutinefunction(item) and not iscoroutine(item):
+            if (
+                callable(item)
+                and not iscoroutinefunction(item)
+                and not iscoroutine(item)
+            ):
                 wrapped = wrap_function_to_async(item)
                 setattr(self, attr, wrapped)
             else:

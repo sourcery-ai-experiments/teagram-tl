@@ -1,3 +1,3 @@
-__all__ = ['Web']
+__all__ = ["Web"]
 
 from .backend import Web

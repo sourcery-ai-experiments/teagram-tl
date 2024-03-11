@@ -5,9 +5,9 @@
 #                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
 #                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
 #                                            https://t.me/itzlayz
-#                           
-#                                    🔒 Licensed under the GNU AGPLv3
-#                                 https://www.gnu.org/licenses/agpl-3.0.html
+#
+#                                    🔒 Licensed under the СС-by-NC
+#                                 https://creativecommons.org/licenses/by-nc/4.0/
 
 import typing
 
@@ -18,27 +18,29 @@ from ..bot.types import InlineCall
 from aiogram import Bot
 from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent
 
+
 @loader.module("Config", "teagram")
 class TeaConfigMod(loader.Module):
-    strings = {'name': "teaconfig"}
+    strings = {"name": "teaconfig"}
+
     def __init__(self):
         self._bot: Bot = self.inline.bot
-    
+
     def keywords(self, config, option: str) -> str:
-        if not (validator := getattr(config.config[option], 'validator')):
+        if not (validator := getattr(config.config[option], "validator")):
             return ""
 
         if isinstance(validator, validators.Hidden):
             return "👥 <b>Hidden validator</b>"
 
-        if not (keywords := getattr(validator.type, 'keywords', '')):
+        if not (keywords := getattr(validator.type, "keywords", "")):
             return ""
 
         keys = list(keywords.items())
-        text = ", ".join(f'<b>{key[0]}</b> - <code>{key[1]}</code>' for key in keys)
+        text = ", ".join(f"<b>{key[0]}</b> - <code>{key[1]}</code>" for key in keys)
 
         return f"🔎 {text}"
-    
+
     def hide(self, validator, value: str) -> str:
         if not value:
             return value
@@ -46,13 +48,9 @@ class TeaConfigMod(loader.Module):
             return "".join("*" for _ in range(len(value)))
 
         return value
-    
+
     async def change(
-        self, 
-        call: InlineCall,
-        module: str,
-        option: str, 
-        value: typing.Any
+        self, call: InlineCall, module: str, option: str, value: typing.Any
     ):
         module = self.lookup(module)
         config = module.config
@@ -61,26 +59,20 @@ class TeaConfigMod(loader.Module):
         config.config[option].value = value
 
         module.set(option, value)
-    
+
         markup = [
             {
-                "text": self.strings("back"), 
+                "text": self.strings("back"),
                 "callback": self.configure,
-                "args": (module.name)
+                "args": (module.name),
             }
         ]
 
         await call.edit(
-            self.strings("edit_value"),
-            self.inline._generate_markup(markup)
+            self.strings("edit_value"), self.inline._generate_markup(markup)
         )
 
-    async def set_default_value(
-        self,
-        call: InlineCall,
-        module: str,
-        option: str
-    ):
+    async def set_default_value(self, call: InlineCall, module: str, option: str):
         module = self.lookup(module.lower())
         config = module.config
         value = config.get_default(option)
@@ -91,36 +83,28 @@ class TeaConfigMod(loader.Module):
         module.set(option, value)
         markup = [
             {
-                "text": self.strings("back"), 
+                "text": self.strings("back"),
                 "callback": self.configure,
-                "args": (module.name)
+                "args": (module.name),
             }
         ]
 
         await call.edit(
-            self.strings("edit_default_value"),
-            self.inline._generate_markup(markup)
+            self.strings("edit_default_value"), self.inline._generate_markup(markup)
         )
-        
-    async def set_value_inline_handler(
-        self,
-        call: InlineQuery
-    ):
-        if not getattr(self, '_id', {}).get('id', ''):
+
+    async def set_value_inline_handler(self, call: InlineQuery):
+        if not getattr(self, "_id", {}).get("id", ""):
             return
 
-        option = self._id['option']
-        module = self._id['module']
-        value = utils.validate(call.query.replace('set_value ', ''))
+        option = self._id["option"]
+        module = self._id["module"]
+        value = utils.validate(call.query.replace("set_value ", ""))
 
         module = self.lookup(module)
         config = module.config
         markup = [
-            {
-                "text": self.strings("back"), 
-                "callback": self.configure,
-                "args": (module)
-            }
+            {"text": self.strings("back"), "callback": self.configure, "args": (module)}
         ]
 
         try:
@@ -130,62 +114,55 @@ class TeaConfigMod(loader.Module):
                 [
                     InlineQueryResultArticle(
                         id=utils.random_id(),
-                        title='Error',
+                        title="Error",
                         input_message_content=InputTextMessageContent(
-                            self.strings("keywords_error")),
-                        reply_markup=self.inline._generate_markup(markup)
+                            self.strings("keywords_error")
+                        ),
+                        reply_markup=self.inline._generate_markup(markup),
                     )
                 ]
             )
-        
+
         return await call.answer(
             [
                 InlineQueryResultArticle(
                     id=utils.random_id(),
-                    title='Teagram',
-                    description='Configuring',
+                    title="Teagram",
+                    description="Configuring",
                     input_message_content=InputTextMessageContent(
-                        self.strings("sure_change")),
+                        self.strings("sure_change")
+                    ),
                     reply_markup=self.inline._generate_markup(
                         [
                             {
                                 "text": self.strings("change"),
                                 "callback": self.change,
-                                "args": (self._id['module'], option, value)
+                                "args": (self._id["module"], option, value),
                             }
-                        ] + [markup]
-                    )
+                        ]
+                        + [markup]
+                    ),
                 )
             ]
-        )   
+        )
 
-    async def back_modules(
-        self,
-        call: InlineCall
-    ):
+    async def back_modules(self, call: InlineCall):
         markup = [
             {
-                "text": module.name.title(), 
-                'callback': self.configure, 
-                'args': (module.name)
-            } 
+                "text": module.name.title(),
+                "callback": self.configure,
+                "args": (module.name),
+            }
             for module in self.manager.modules
-            if getattr(self.lookup(module.name), 'config', '')
+            if getattr(self.lookup(module.name), "config", "")
         ]
 
         await call.edit(
             self.strings("choose_module"),
-            reply_markup=self.inline._generate_markup(
-                utils.sublist(markup))
+            reply_markup=self.inline._generate_markup(utils.sublist(markup)),
         )
 
-    async def show_value(
-        self,
-        call: InlineCall,
-        module: str,
-        option: str,
-        value: str
-    ):
+    async def show_value(self, call: InlineCall, module: str, option: str, value: str):
         config = self.lookup(module).config
         docstring = config.get_doc(option)
         default = config.get_default(option)
@@ -193,82 +170,56 @@ class TeaConfigMod(loader.Module):
 
         if callable(docstring):
             docstring = docstring()
-            
+
         markup = [
             [
-                {
-                    "text": self.strings("change"),
-                    "input": "set_value"
-                },
+                {"text": self.strings("change"), "input": "set_value"},
                 {
                     "text": self.strings("default"),
                     "callback": self.set_default_value,
-                    "args": (module, option)
+                    "args": (module, option),
                 },
             ],
             [
                 {
                     "text": self.strings("hide"),
                     "callback": self.configure_value,
-                    "args": (module, option)
+                    "args": (module, option),
                 }
             ],
             [
                 {
-                    "text": self.strings("back"), 
+                    "text": self.strings("back"),
                     "callback": self.configure,
-                    "args": (module)
+                    "args": (module),
                 }
-            ]
+            ],
         ]
         await call.edit(
             (
-                self.strings("configure_value").format(module, option) +
-                f"❔ {docstring}\n\n" +
-                self.strings("default_value").format(utils.escape_html(default)) +
-                self.strings("current_value").format(utils.escape_html(value)) +
-                self.keywords(config, option)
+                self.strings("configure_value").format(module, option)
+                + f"❔ {docstring}\n\n"
+                + self.strings("default_value").format(utils.escape_html(default))
+                + self.strings("current_value").format(utils.escape_html(value))
+                + self.keywords(config, option)
             ),
-            self.inline._generate_markup(markup)
+            self.inline._generate_markup(markup),
         )
 
-    async def configure(
-        self, 
-        call: InlineCall, 
-        module: str
-    ):
+    async def configure(self, call: InlineCall, module: str):
         markup = [
-            {
-                'text': option,
-                'callback': self.configure_value,
-                'args': (module, option)
-            } for option in self.lookup(module).config
-        ] + [
-            [
-                {
-                    "text": self.strings("back"), 
-                    "callback": self.back_modules
-                }
-            ]
-        ]
+            {"text": option, "callback": self.configure_value, "args": (module, option)}
+            for option in self.lookup(module).config
+        ] + [[{"text": self.strings("back"), "callback": self.back_modules}]]
         await call.edit(
-            self.strings("choose_value"),
-            self.inline._generate_markup(markup)
+            self.strings("choose_value"), self.inline._generate_markup(markup)
         )
 
-    async def configure_value(
-        self,
-        call: InlineCall,
-        module: str,
-        option: str
-    ):
+    async def configure_value(self, call: InlineCall, module: str, option: str):
         config = self.lookup(module).config
         docstring = config.get_doc(option)
         default = config.get_default(option)
-        validator = getattr(
-            config.config[option], 
-            "validator", None
-        )
+        validator = getattr(config.config[option], "validator", None)
         value = config[option]
 
         if callable(docstring):
@@ -279,14 +230,11 @@ class TeaConfigMod(loader.Module):
 
         markup = [
             [
-                {
-                    "text": self.strings("change"),
-                    "input": "set_value"
-                },
+                {"text": self.strings("change"), "input": "set_value"},
                 {
                     "text": self.strings("default"),
                     "callback": self.set_default_value,
-                    "args": (module, option)
+                    "args": (module, option),
                 },
             ],
             (
@@ -294,68 +242,56 @@ class TeaConfigMod(loader.Module):
                     {
                         "text": self.strings("show"),
                         "callback": self.show_value,
-                        "args": (module, option, value)
+                        "args": (module, option, value),
                     }
-                ] if isinstance(
-                    validator,
-                    validators.Hidden
-                ) 
+                ]
+                if isinstance(validator, validators.Hidden)
                 else []
             ),
             [
                 {
-                    "text": self.strings("back"), 
+                    "text": self.strings("back"),
                     "callback": self.configure,
-                    "args": (module)
+                    "args": (module),
                 }
-            ]
+            ],
         ]
-        
+
         value = self.hide(validator, value)
         await call.edit(
             (
-                self.strings("configure_value").format(module, option) +
-                f"❔ {docstring}\n\n" +
-                self.strings("default_value").format(utils.escape_html(default)) +
-                self.strings("current_value").format(utils.escape_html(value)) +
-                self.keywords(config, option)
+                self.strings("configure_value").format(module, option)
+                + f"❔ {docstring}\n\n"
+                + self.strings("default_value").format(utils.escape_html(default))
+                + self.strings("current_value").format(utils.escape_html(value))
+                + self.keywords(config, option)
             ),
-            self.inline._generate_markup(markup)
+            self.inline._generate_markup(markup),
         )
 
-    async def opencfg(
-        self,
-        call: InlineCall
-    ):
+    async def opencfg(self, call: InlineCall):
         await call.edit(
             text=self.strings("choose_module"),
             reply_markup=self.inline._generate_markup(
                 utils.sublist(
                     [
                         {
-                            "text": module.name.title(), 
-                            'callback': self.configure, 
-                            'args': (module.name)
-                        } 
+                            "text": module.name.title(),
+                            "callback": self.configure,
+                            "args": (module.name),
+                        }
                         for module in self.manager.modules
-                        if getattr(self.lookup(module.name), 'config', '')
+                        if getattr(self.lookup(module.name), "config", "")
                     ]
                 )
-            )
+            ),
         )
 
     @loader.command()
     async def cfgcmd(self, message):
-        markup = [
-            {
-                "text": self.strings('open'),
-                "callback": self.opencfg
-            }
-        ]
+        markup = [{"text": self.strings("open"), "callback": self.opencfg}]
 
         await self.inline.form(
-            message=message,
-            text="⚙ <b>Teagram | Config</b>",
-            reply_markup=markup
+            message=message, text="⚙ <b>Teagram | Config</b>", reply_markup=markup
         )
         await message.delete()

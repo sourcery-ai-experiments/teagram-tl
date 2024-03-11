@@ -1,3 +1,14 @@
+#                            ██╗████████╗███████╗██╗░░░░░░█████╗░██╗░░░██╗███████╗
+#                            ██║╚══██╔══╝╚════██║██║░░░░░██╔══██╗╚██╗░██╔╝╚════██║
+#                            ██║░░░██║░░░░░███╔═╝██║░░░░░███████║░╚████╔╝░░░███╔═╝
+#                            ██║░░░██║░░░██╔══╝░░██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░
+#                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
+#                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
+#                                            https://t.me/itzlayz
+#
+#                                    🔒 Licensed under the СС-by-NC
+#                                 https://creativecommons.org/licenses/by-nc/4.0/
+
 help:
   no: "<b>No description available for the command</b>"
   nomd: "<b>No description available for the module</b>"
@@ -59,6 +70,8 @@ loader:
   wrongmod: '❌ <b>You specified the wrong module</b>'
   replymod: '⚙ <b>Module <code>{}</code></b>'
   replytoload: '📁 <b>To install the module, send <code>{}loadmod</code> as a reply to this message</b>'
+  accept: "✅ Load module"
+  decline: "❌ Don't load module"
 
 translator:
   notext: '❌ <b>You did not specify any text</b>'
@@ -127,6 +140,8 @@ settings:
   nouser: "<b>❔ No users found</b>"
   user: "<b>Users:</b>"
   chbot: "<b>✔ You succesfully changed inline bot!\nRestart for changes (<code>{}</code>)</b>"
+  iname_ch: "<b>You succesfully changed <code>{cur}</code> bot's name from <code>{last}</code> to <code>{cur}</code></b>"
+  noargs: "❌ <b>No arguments</b>"
 
 dump:
   dumped: "Dump created"

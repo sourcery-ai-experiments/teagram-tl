@@ -5,9 +5,9 @@
 #                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
 #                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
 #                                            https://t.me/itzlayz
-#                           
-#                                    🔒 Licensed under the GNU AGPLv3
-#                                 https://www.gnu.org/licenses/agpl-3.0.html
+#
+#                                    🔒 Licensed under the СС-by-NC
+#                                 https://creativecommons.org/licenses/by-nc/4.0/
 
 import asyncio
 import os
@@ -17,7 +17,6 @@ import re
 import subprocess
 
 import logging
-import traceback
 
 import requests
 import inspect
@@ -30,7 +29,8 @@ from typing import Union, List, Dict, Any, Callable
 from types import FunctionType, LambdaType
 
 from telethon import TelegramClient, types
-from . import dispatcher, utils, database, bot, translation
+
+from . import dispatcher, utils, database, bot, translation, permissions
 from . import validators as _validators
 from . import types as ttypes
 
@@ -42,6 +42,7 @@ VALID_PIP_PACKAGES = re.compile(
 
 logger = logging.getLogger()
 
+
 class Loop:
     def __init__(
         self,
@@ -49,10 +50,10 @@ class Loop:
         interval: Union[int, float],
         autostart: bool,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """Args, kwargs using in start"""
-        
+
         self.func = func
         self.interval = interval
         self.autostart = autostart
@@ -86,16 +87,16 @@ class Loop:
     async def loop(self, *args, **kwargs):
         while self.status:
             if self.interval <= 0:
-                logger.exception('Interval must be higher than zero')
+                logger.exception("Interval must be higher than zero")
                 break
 
-            if not getattr(self, 'method', ''):
+            if not getattr(self, "method", ""):
                 break
 
             try:
                 await self.func(self.method, *args, **kwargs)
             except Exception:
-                logger.error(traceback.format_exc())
+                logger.exception(f"{self.func.__name__} loop got error:")
 
             await asyncio.sleep(self.interval)
 
@@ -105,12 +106,15 @@ class Loop:
 def module(
     name: str,
     author: Union[str, None] = None,
-    version: Union[int, float, None] = None
+    version: Union[int, float, None] = None,
+    warning: Union[str, None] = None,
 ) -> FunctionType:
     def decorator(instance: "Module"):
         instance.name = name
         instance.author = author
         instance.version = version
+        instance.warning = warning
+
         return instance
 
     return decorator
@@ -121,32 +125,24 @@ class Module:
     name: str
     author: str
     version: Union[int, float]
+    warning: str
 
-    async def on_load(self) -> Any:
-        ...
-    
-    async def on_unload(self) -> Any:
-        ...
+    async def on_load(self) -> Any: ...
+
+    async def on_unload(self) -> Any: ...
 
     # same as on_load but with some args
-    async def client_ready(self, client, db):
-        ...
+    async def client_ready(self, client, db): ...
 
-    def get(self, key: str, _: Any = None) -> Any:
-        db = getattr(self, 'db', {}) # we can't get db now
-        
-        return db.get(
-            self.__class__.__name__,
-            key, _
-        )
+    def get(self, key: str, default: Any = None) -> Any:
+        db = getattr(self, "db", {})
+
+        return db.get(self.__class__.__name__, key, default)
 
     def set(self, key: str, value: Any) -> None:
-        db = getattr(self, 'db', {})
-        
-        db.set(
-            self.__class__.__name__,
-            key, value
-        )
+        db = getattr(self, "db", {})
+
+        db.set(self.__class__.__name__, key, value)
 
 
 class StringLoader(SourceLoader):
@@ -166,37 +162,42 @@ class StringLoader(SourceLoader):
     def get_data(self, _: str) -> str:
         return self.data
 
+
 def get_command_handlers(instance: Module) -> Dict[str, FunctionType]:
     command_handlers = {}
     for method_name in dir(instance):
         iscmd = hasattr(getattr(instance, method_name), "is_command")
-        if callable(getattr(instance, method_name)) and (len(method_name) > 4 if not iscmd else True):
+        if callable(getattr(instance, method_name)) and (
+            len(method_name) > 4 if not iscmd else True
+        ):
             if method_name.endswith("_cmd"):
-                command_handlers[method_name[:-4].lower()] = getattr(instance, method_name)
+                command_handlers[method_name[:-4].lower()] = getattr(
+                    instance, method_name
+                )
             elif method_name.endswith("cmd"):
-                command_handlers[method_name[:-3].lower()] = getattr(instance, method_name)
+                command_handlers[method_name[:-3].lower()] = getattr(
+                    instance, method_name
+                )
             elif iscmd:
-                method_name = method_name.replace('_cmd', '').replace('cmd', '')
+                method_name = method_name.replace("_cmd", "").replace("cmd", "")
                 command_handlers[method_name] = getattr(instance, method_name)
-                
+
     return command_handlers
 
 
-def get_watcher_handlers(instance: 'Module') -> List[FunctionType]:
+def get_watcher_handlers(instance: "Module") -> List[FunctionType]:
     return [
-        method for method in dir(instance)
-        if callable(getattr(instance, method)) and(
-            method.startswith("watcher")
-            or hasattr(method, 'watcher')
-        )
+        method
+        for method in dir(instance)
+        if callable(getattr(instance, method))
+        and (method.startswith("watcher") or hasattr(method, "watcher"))
     ]
 
 
 def get_message_handlers(instance: Module) -> Dict[str, FunctionType]:
     return {
-        method_name[:-16].lower(): getattr(
-            instance, method_name
-        ) for method_name in dir(instance)
+        method_name[:-16].lower(): getattr(instance, method_name)
+        for method_name in dir(instance)
         if (
             callable(getattr(instance, method_name))
             and len(method_name) > 16
@@ -207,9 +208,8 @@ def get_message_handlers(instance: Module) -> Dict[str, FunctionType]:
 
 def get_callback_handlers(instance: Module) -> Dict[str, FunctionType]:
     return {
-        method_name[:-17].lower(): getattr(
-            instance, method_name
-        ) for method_name in dir(instance)
+        method_name[:-17].lower(): getattr(instance, method_name)
+        for method_name in dir(instance)
         if (
             callable(getattr(instance, method_name))
             and len(method_name) > 17
@@ -217,22 +217,25 @@ def get_callback_handlers(instance: Module) -> Dict[str, FunctionType]:
         )
     }
 
+
 def get_inline_handlers(instance: Module) -> Dict[str, Callable]:
     inline_handlers = {}
 
     for method_name in dir(instance):
-        if (
-            callable(getattr(instance, method_name))
-            and (
-                (len(method_name) > 15 and method_name.endswith("_inline_handler"))
-                or hasattr(getattr(instance, method_name), "is_inline_handler")
-            )
+        if callable(getattr(instance, method_name)) and (
+            (len(method_name) > 15 and method_name.endswith("_inline_handler"))
+            or hasattr(getattr(instance, method_name), "is_inline_handler")
         ):
-            key = method_name[:-15].lower() if len(method_name) > 15 else method_name.lower()
+            key = (
+                method_name[:-15].lower()
+                if len(method_name) > 15
+                else method_name.lower()
+            )
             value = getattr(instance, method_name.lower())
             inline_handlers[key] = value
 
     return inline_handlers
+
 
 def get_loops(instance: Module):
     loops = []
@@ -240,14 +243,15 @@ def get_loops(instance: Module):
     for method in dir(instance):
         func = getattr(instance, method)
         if (
-            callable(getattr(instance, method)) and
-            hasattr(func, 'loop') and
-            method.startswith('loop') or
-            method.endswith('loop')
+            callable(getattr(instance, method))
+            and hasattr(func, "loop")
+            and method.startswith("loop")
+            or method.endswith("loop")
         ):
             loops.append(func)
 
     return loops
+
 
 def tag(*args, **kwargs) -> FunctionType:
     def decorator(func: FunctionType):
@@ -261,19 +265,17 @@ def tag(*args, **kwargs) -> FunctionType:
 
     return decorator
 
+
 def loop(interval: Union[int, float], autostart: bool = True):
     def decorator(func: FunctionType):
         _loop = Loop(func, interval, autostart)
         setattr(func, "loop", True)
-        tag(
-            _loop=_loop,
-            interval=interval,
-            autostart=autostart
-        )
+        tag(_loop=_loop, interval=interval, autostart=autostart)
 
         return _loop
 
     return decorator
+
 
 def command(docs: str = None, alias: str = None, *args, **kwargs) -> FunctionType:
     def decorator(func: FunctionType):
@@ -282,23 +284,25 @@ def command(docs: str = None, alias: str = None, *args, **kwargs) -> FunctionTyp
 
         if alias:
             setattr(func, "alias", alias)
-        
+
         setattr(func, "is_command", True)
         tag(*args, **kwargs)
         return func
 
     return decorator
 
+
 def inline_handler(docs: str = None, *args, **kwargs) -> FunctionType:
     def decorator(func: FunctionType):
         if docs:
             func.__doc__ = docs
-        
+
         setattr(func, "is_inline_handler", True)
         tag(*args, **kwargs)
         return func
 
     return decorator
+
 
 def watcher(*args, **kwargs) -> FunctionType:
     def decorator(func: FunctionType):
@@ -308,14 +312,16 @@ def watcher(*args, **kwargs) -> FunctionType:
 
     return decorator
 
+
 def inline_everyone(func: Callable) -> FunctionType:
-    return setattr(func, 'inline_everyone', True)
+    return setattr(func, "inline_everyone", True)
+
 
 def on_bot(custom_filters: LambdaType) -> FunctionType:
     """
     Makes custom filter for bot
     :param custom_filters: Lambda filter
-    :returns: 
+    :returns:
     """
 
     def decorator(func: FunctionType):
@@ -324,9 +330,13 @@ def on_bot(custom_filters: LambdaType) -> FunctionType:
 
     return decorator
 
-# non functional, for hikka
-def tds(cls):
+
+def tds(cls: type):
     return cls
+
+
+owner = permissions.owner
+unrestricted = permissions.unrestricted
 
 
 # hikka support
@@ -334,14 +344,12 @@ ModuleConfig = ttypes.Config
 ConfigValue = ttypes.HikkaValue
 validators = _validators
 
+
 class ModulesManager:
     """Manager of modules"""
 
     def __init__(
-        self,
-        client: TelegramClient,
-        db: database.Database,
-        me: types.User
+        self, client: TelegramClient, db: database.Database, me: types.User
     ) -> None:
         self.modules: List[Module] = []
         self.watcher_handlers: List[FunctionType] = []
@@ -357,44 +365,51 @@ class ModulesManager:
         self._client: TelegramClient = client
         self._db: database.Database = db
         self.me: types.User = me
+        self.warnings: List[str] = []
 
         langpack = utils.get_langpack()
+        while not langpack:  # idk why, but sometimes it returns None
+            langpack = utils.get_langpack()
+
         self.aliases: dict = self._db.get(__name__, "aliases", {})
-        self.strings: dict = langpack.get('manager')
+        self.strings: dict = langpack.get("manager")
         self.translator = translation.Translator(self._db)
         self.core_modules = [
-            'backuper',
-            'teaconfig',
-            'dump',
-            'eval',
-            'help',
-            'info',
-            'loader',
-            'settings',
-            'terminal',
-            'updater'
+            "backuper",
+            "teaconfig",
+            "dump",
+            "eval",
+            "help",
+            "info",
+            "loader",
+            "settings",
+            "terminal",
+            "updater",
         ]
 
         self.dp: dispatcher.DispatcherManager = None
         self.bot_manager: bot.BotManager = None
-        self.inline: bot.BotManager = None # same as bot_manager
+        self.inline: bot.BotManager = None  # same as bot_manager
+
+        self.security = permissions.Security(self._db)
 
     async def load(self, app: TelegramClient) -> bool:
-        setattr(app, 'loader', self)
-        
+        setattr(app, "loader", self)
 
         self.dp = dispatcher.DispatcherManager(app, self)
         await self.dp.load()
 
         self.bot_manager = bot.BotManager(app, self._db, self)
         await self.bot_manager.load()
+
         self.inline = self.bot_manager
-        self.me.phone = "sup"
-        
-        setattr(app, 'inline_bot', self.inline.bot)
+        self.me.phone = None
+
+        setattr(app, "inline_bot", self.inline.bot)
         for local_module in filter(
             lambda file_name: file_name.endswith(".py")
-            and not file_name.startswith("_"), os.listdir(self._local_modules_path)
+            and not file_name.startswith("_"),
+            os.listdir(self._local_modules_path),
         ):
             module_name = f"teagram.modules.{local_module[:-3]}"
             file_path = os.path.join(
@@ -404,21 +419,21 @@ class ModulesManager:
             try:
                 self.register_instance(module_name, file_path)
             except Exception as error:
-                logger.exception(
-                    f"Error loading local module {module_name}: {error}")
+                logger.exception(f"Error loading local module {module_name}: {error}")
 
         await self.send_on_loads()
-
         for custom_module in self._db.get(__name__, "modules", []):
             try:
                 r = await utils.run_sync(requests.get, custom_module)
                 await self.load_module(r.text, r.url)
             except requests.exceptions.RequestException as error:
                 logger.exception(
-                    f"Error loading third party module {custom_module}: {error}")
+                    f"Error loading third party module {custom_module}: {error}"
+                )
 
+        self.warnings = []
         return self.bot_manager.bot
-    
+
     def _init(self, value) -> Any:
         """Init module's attributes"""
         value.db = self._db
@@ -437,10 +452,7 @@ class ModulesManager:
         """Init instance"""
         instance.command_handlers = get_command_handlers(instance)
         instance.watcher_handlers = list(
-            map(
-                lambda x: getattr(instance, x),
-                get_watcher_handlers(instance)
-            )
+            map(lambda x: getattr(instance, x), get_watcher_handlers(instance))
         )
 
         instance.loops = get_loops(instance)
@@ -451,19 +463,15 @@ class ModulesManager:
         instance.inline_handlers = get_inline_handlers(instance)
 
         if (
-            not instance.name or 
-            instance.name.lower() == 'unknown' and 
-            (
-                name := getattr(
-                    instance, 'strings', {}
-                ).get('name', '')
-            )
+            not instance.name
+            or instance.name.lower() == "unknown"
+            and (name := getattr(instance, "strings", {}).get("name", ""))
         ):
             instance.name = name
-        
-        instance.strings = translation.Strings(
-            instance, self.translator)
+
+        instance.strings = translation.Strings(instance, self.translator)
         instance.translator = self.translator
+        instance = self.update_config(instance)
 
         self.modules.append(instance)
         self.command_handlers.update(instance.command_handlers)
@@ -476,24 +484,34 @@ class ModulesManager:
 
         if instance.loops:
             for loop in self.loops:
-                if not getattr(loop, 'method', ''):
-                    setattr(loop, 'method', instance)
+                if not getattr(loop, "method", ""):
+                    setattr(loop, "method", instance)
 
         for name, func in instance.command_handlers.copy().items():
-            if getattr(func, 'alias', ''):
+            if getattr(func, "alias", ""):
                 self.aliases[func.alias] = name
 
         return instance
 
     def get_prefix(self) -> list:
         """Returns prefix"""
-        return self._db.get('teagram.loader', 'prefixes', ['.'])
+        return self._db.get("teagram.loader", "prefixes", ["."])
+
+    def update_config(self, instance):
+        config = getattr(instance, "config", None)
+        if config:
+            for k, v in config.items():
+                value = instance.get(k, config.config[k].default)
+
+                config[k] = value
+                config.config[k].value = value
+
+            instance.config = config
+
+        return instance
 
     def register_instance(
-        self,
-        module_name: str,
-        file_path: str = "",
-        spec: ModuleSpec = None
+        self, module_name: str, file_path: str = "", spec: ModuleSpec = None
     ) -> Module:
         spec = spec or spec_from_file_location(module_name, file_path)
         module = module_from_spec(spec)
@@ -507,6 +525,11 @@ class ModulesManager:
                     if module.__class__.__name__ == value.__name__:
                         self.unload_module(module, True)
 
+                warning = value.warning
+                if warning not in self.warnings and warning:
+                    self.warnings.append(warning)
+                    return (value, warning)
+
                 value = self._init(value)
                 instance = self._init_instance(value())
 
@@ -516,31 +539,49 @@ class ModulesManager:
         return instance
 
     async def load_module(
-        self, 
-        module_source: str, 
-        origin: str = "<string>", 
-        did_requirements: bool = False
+        self,
+        module_source: str,
+        origin: str = "<string>",
+        did_requirements: bool = False,
     ) -> str:
         module_name = f"teagram.modules.{utils.random_id()}"
 
         try:
-            spec = ModuleSpec(module_name, StringLoader(
-                module_source, origin), origin=origin)
+            spec = ModuleSpec(
+                module_name, StringLoader(module_source, origin), origin=origin
+            )
             instance = self.register_instance(module_name, spec=spec)
-        except ImportError:
+        except (ImportError, ModuleNotFoundError):
             if did_requirements:
                 return True
             try:
-                requirements = re.findall(r"# required:\s+([\w-]+(?:\s+[\w-]+)*)", module_source)
-            except TypeError:
-                logger.error(traceback.format_exc())
-                return logger.warning("Installation packages not specified")
-            
-            if not requirements:
-                logger.error(traceback.format_exc())
-                return logger.warning("Installation packages not specified")
+                requirements = re.findall(
+                    r"#\s*(requires|required):\s*(.+?)\n", module_source
+                )
 
-            logger.info(f"Installing packages: {', '.join(requirements)}...")
+                if not requirements:
+                    requirements = []
+                    imports = re.findall(
+                        r"^import\s+[\w\d_]+(?!\s*from\s+[\w\d_]+\s*import)",
+                        module_source,
+                        re.MULTILINE,
+                    )
+
+                    for _import in imports:
+                        _import = _import.split()[-1]
+                        try:
+                            __import__(_import)
+                        except ImportError:
+                            requirements.append(_import)
+
+                    requirements = " ".join(requirements)
+
+                    if not requirements:
+                        raise TypeError("Installation packages not specified")
+            except TypeError:
+                return logger.exception("")
+
+            logger.info(f"Installing packages: {requirements[0][-1]}...")
             try:
                 subprocess.run(
                     [
@@ -548,8 +589,7 @@ class ModulesManager:
                         "-m",
                         "pip",
                         "install",
-                        "--user",
-                        requirements,
+                        requirements[0][-1],
                     ]
                 )
             except subprocess.CalledProcessError as error:
@@ -557,11 +597,10 @@ class ModulesManager:
 
             return await self.load_module(module_source, origin, True)
         except Exception as error:
-            return logger.exception(
-                f"Error loading module {origin}: {error}")
+            return logger.exception(f"Error loading module {origin}: {error}")
 
-        if not instance:
-            return False
+        if isinstance(instance, tuple):
+            return instance
 
         try:
             await self.send_on_load(instance)
@@ -588,38 +627,36 @@ class ModulesManager:
             else:
                 await module.client_ready()
 
-            
         except Exception as error:
             return logger.exception(error)
 
         return True
 
-    def unload_module(
-        self, 
-        module_name: str = None, 
-        is_replace: bool = False
-    ) -> str:
+    def unload_module(self, module_name: str = None, is_replace: bool = False) -> str:
         if is_replace:
             module = module_name
         else:
             if not (module := self.lookup(module_name)):
                 return False
-            
+
             try:
-                asyncio.get_running_loop().create_task(module.on_unload())
+                asyncio.ensure_future(module.on_unload())
             except Exception as error:
                 logger.exception(error)
 
             if (get_module := inspect.getmodule(module)).__spec__.origin != "<string>":
                 set_modules = set(self._db.get(__name__, "modules", []))
-                self._db.set("teagram.loader", "modules",
-                             list(set_modules - {get_module.__spec__.origin}))
+                self._db.set(
+                    "teagram.loader",
+                    "modules",
+                    list(set_modules - {get_module.__spec__.origin}),
+                )
 
             for alias, command in self.aliases.copy().items():
                 if command in module.command_handlers:
                     del self.aliases[alias]
                     del self.command_handlers[command]
-            
+
             for loop in self.loops:
                 if loop in module.loops:
                     loop.stop()
@@ -638,9 +675,7 @@ class ModulesManager:
         self.callback_handlers = dict(
             set(self.callback_handlers.items()) ^ set(module.callback_handlers.items())
         )
-        self.loops = list(
-            set(self.loops) ^ set(module.loops)
-        )
+        self.loops = list(set(self.loops) ^ set(module.loops))
 
         return module.name
 
@@ -649,8 +684,18 @@ class ModulesManager:
         if not isinstance(name, str):
             return None
 
-        module = next((module for module in self.modules if module.name.lower() in name.lower()), None)
+        module = next(
+            (module for module in self.modules if module.name.lower() in name.lower()),
+            None,
+        )
         if not module:
-            module = next((module for module in self.modules if name.lower() in module.name.lower()), None)
+            module = next(
+                (
+                    module
+                    for module in self.modules
+                    if name.lower() in module.name.lower()
+                ),
+                None,
+            )
             return module if module else None
         return module

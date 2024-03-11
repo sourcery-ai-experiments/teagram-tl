@@ -1,3 +1,14 @@
+#                            ██╗████████╗███████╗██╗░░░░░░█████╗░██╗░░░██╗███████╗
+#                            ██║╚══██╔══╝╚════██║██║░░░░░██╔══██╗╚██╗░██╔╝╚════██║
+#                            ██║░░░██║░░░░░███╔═╝██║░░░░░███████║░╚████╔╝░░░███╔═╝
+#                            ██║░░░██║░░░██╔══╝░░██║░░░░░██╔══██║░░╚██╔╝░░██╔══╝░░
+#                            ██║░░░██║░░░███████╗███████╗██║░░██║░░░██║░░░███████╗
+#                            ╚═╝░░░╚═╝░░░╚══════╝╚══════╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
+#                                            https://t.me/itzlayz
+#
+#                                    🔒 Licensed under the СС-by-NC
+#                                 https://creativecommons.org/licenses/by-nc/4.0/
+
 help:
   no: "<b>Ushbu buyruq uchun tavsif mavjud emas</b>"
   nomd: "<b>Modul uchun tavsif mavjud emas</b>"
@@ -59,6 +70,8 @@ loader:
   wrongmod: '❌ <b>Noto'g'ri modulni kiritdingiz</b>'
   replymod: '⚙ <b>Modul <code>{}</code></b>'
   replytoload: '📁 <b>Modulni o'rnatish uchun, bu xabarga javob sifatida <code>{}loadmod</code>ni yuboring</b>'
+  accept: "✅ Modulni yuklash"
+  decline: "❌ Modulni yuklamaslik"
 
 translator:
   notext: '❌ <b>Matnni kiritmadingiz</b>'
@@ -128,6 +141,9 @@ settings:
   nouser: "<b>❔ Foydalanuvchilar topilmadi</b>"
   user: "<b>Foydalanuvchilar:</b>"
   chbot: "<b>✔ Siz muvaffaqiyatli inline botni o'zgartirdingiz!\nO'zgartirish uchun qayta ishlang (<code>{}</code>)</b>"
+  iname_ch: "<b>Siz muvaffaqiyatli <code>{cur}</code> bot nomini <code>{last}</code> dan <code>{cur}</code> ga o'zgartirdingiz</b>"
+  noargs: "❌ <b>Argumentlar mavjud emas</b>"
+
 
 dump:
   dumped: "Dump yaratildi"
