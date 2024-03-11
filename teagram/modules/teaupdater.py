@@ -143,7 +143,10 @@ class UpdateMod(loader.Module):
 
     async def update_cmd(self, message: types.Message):
         if no_git:
-            return await utils.answer(message, "❌ <b>No git</b>")
+            return await utils.answer(
+                message,
+                "<emoji document_id=5210952531676504517>❌</emoji> <b>No git</b>",
+            )
         try:
             await utils.answer(message, self.strings["updating"])
             try:
