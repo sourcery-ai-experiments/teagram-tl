@@ -460,6 +460,40 @@ async def set_avatar(
     return True
 
 
+# https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L879C1-L886C63
+def chunks(_list: typing.List, n: int, /) -> typing.List[typing.List[typing.Any]]:
+    """
+    Split provided `_list` into chunks of `n`
+    :param _list: List to split
+    :param n: Chunk size
+    :return: List of chunks
+
+    For example:
+    .. code-block:: python
+    >>> chunks([1, 2, 3, 4, 5, 6], 2)
+    >>> [[1, 2], [3, 4], [5, 6]]
+    """
+    return [_list[i : i + n] for i in range(0, len(_list), n)]
+
+
+# https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L862-L876
+def get_link(user: typing.Union[types.User, types.Channel], /) -> str:
+    """
+    Get telegram permalink to entity
+    :param user: User or channel
+    :return: Link to entity
+    """
+    return (
+        f"tg://user?id={user.id}"
+        if isinstance(user, types.User)
+        else (
+            f"tg://resolve?domain={user.username}"
+            if getattr(user, "username", None)
+            else ""
+        )
+    )
+
+
 async def answer(
     message: Union[Message, List[Message]],
     response: Union[str, Any],
@@ -482,10 +516,15 @@ async def answer(
     :param parse_mode: Markdown/HTML
     :return: `Message`
     """
+    if not message:
+        logging.error("No passed message")
+        return
+
     client = message._client
     chat = get_chat(message)
     reply_to = get_topic(message) if topic else message.id
 
+    msg = None
     if parse_mode.lower() == "html":
         parse_mode = HTMLParser
 
@@ -494,21 +533,12 @@ async def answer(
 
     if isinstance(response, str) and not photo and not document:
         if len(response) > 4096:
-            file = io.BytesIO(response.encode())
-            file.name = "response.txt"
-
-            msg = await client.send_file(
-                chat,
-                file,
-                caption=f"📁 <b>Сообщение отправлено файлом</b> (<code>{len(response)}/4096</code>)",
-                parse_mode="HTML",
-                reply_to=reply_to,
-                **kwargs,
+            msg = await client.inline.list(
+                message=message, strings=chunks(response, 4096)
             )
 
             if message.out:
                 await message.delete()
-
         else:
             try:
                 msg = await client.edit_message(
@@ -555,40 +585,6 @@ async def invoke_inline(message: Message, bot_username: str, inline_id: str):
 
     return await query[0].click(
         get_chat(message), reply_to=message.reply_to_msg_id or None
-    )
-
-
-# https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L879C1-L886C63
-def chunks(_list: typing.List, n: int, /) -> typing.List[typing.List[typing.Any]]:
-    """
-    Split provided `_list` into chunks of `n`
-    :param _list: List to split
-    :param n: Chunk size
-    :return: List of chunks
-
-    For example:
-    .. code-block:: python
-    >>> chunks([1, 2, 3, 4, 5, 6], 2)
-    >>> [[1, 2], [3, 4], [5, 6]]
-    """
-    return [_list[i : i + n] for i in range(0, len(_list), n)]
-
-
-# https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L862-L876
-def get_link(user: typing.Union[types.User, types.Channel], /) -> str:
-    """
-    Get telegram permalink to entity
-    :param user: User or channel
-    :return: Link to entity
-    """
-    return (
-        f"tg://user?id={user.id}"
-        if isinstance(user, types.User)
-        else (
-            f"tg://resolve?domain={user.username}"
-            if getattr(user, "username", None)
-            else ""
-        )
     )
 
 

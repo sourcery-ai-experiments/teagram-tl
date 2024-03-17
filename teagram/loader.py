@@ -34,12 +34,6 @@ from . import dispatcher, utils, database, bot, translation, permissions
 from . import validators as _validators
 from . import types as ttypes
 
-VALID_URL = r"[-[\]_.~:/?#@!$&'()*+,;%<=>a-zA-Z0-9]+"
-VALID_PIP_PACKAGES = re.compile(
-    r"^\s*# required:(?: ?)((?:{url} )*(?:{url}))\s*$".format(url=VALID_URL),
-    re.MULTILINE,
-)
-
 logger = logging.getLogger()
 
 
@@ -405,6 +399,7 @@ class ModulesManager:
         self.inline = self.bot_manager
         self.me.phone = None
 
+        setattr(app, "inline", self.inline)
         setattr(app, "inline_bot", self.inline.bot)
         for local_module in filter(
             lambda file_name: file_name.endswith(".py")
