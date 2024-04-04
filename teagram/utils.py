@@ -9,24 +9,24 @@
 #                                    🔒 Licensed under the СС-by-NC
 #                                 https://creativecommons.org/licenses/by-nc/4.0/
 
-import asyncio
-import functools
-import random
 
+import subprocess
+import functools
 import requests
 import logging
+import asyncio
+import random
 import string
 import typing
 import yaml
 import time
+import git
 import os
-import io
 import re
-import subprocess
 
 from pathlib import Path
 
-import git
+
 import contextlib
 from types import FunctionType
 from urllib.parse import urlparse
