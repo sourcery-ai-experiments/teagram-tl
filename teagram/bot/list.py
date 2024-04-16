@@ -70,6 +70,7 @@ class List:
                     "\n".join(traceback.format_exc().splitlines())
                 )
             )
+            return
 
         return msg
 

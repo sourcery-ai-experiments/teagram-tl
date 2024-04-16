@@ -9,29 +9,32 @@
 #                                    🔒 Licensed under the СС-by-NC
 #                                 https://creativecommons.org/licenses/by-nc/4.0/
 
-import asyncio
-import functools
-import random
 
+import subprocess
+import functools
 import requests
 import logging
+import asyncio
+import grapheme
+import random
 import string
 import typing
 import yaml
 import time
+import git
 import os
-import io
 import re
-import subprocess
+import io
 
 from pathlib import Path
 
-import git
+
 import contextlib
 from types import FunctionType
 from urllib.parse import urlparse
 from typing import Any, List, Literal, Tuple, Union
 from telethon import TelegramClient, types, events, hints
+from telethon.tl.types import MessageEntityUnknown
 from telethon.tl.functions.channels import (
     CreateChannelRequest,
     InviteToChannelRequest,
@@ -50,15 +53,16 @@ from telethon.tl import custom
 from . import database, init_time
 from .types import HTMLParser
 
-Message = Union[custom.Message, types.Message]
 _init_time = init_time
+
+supress = contextlib.suppress
+Message = Union[custom.Message, types.Message]
 BASE_DIR = (
     "/data"
     if "DOCKER" in os.environ
     else os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )
 BASE_PATH = Path(BASE_DIR)
-supress = contextlib.suppress
 
 lsb_release_exists = False
 try:
@@ -244,6 +248,155 @@ def disable_task_error(task: asyncio.Task) -> None:
 # https://github.com/hikariatama/Hikka/blob/master/hikka/_internal.py#L16-L17
 async def fw_protect():
     await asyncio.sleep(random.randint(1000, 3000) / 1000)
+
+
+# https://raw.githubusercontent.com/hikariatama/Hikka/master/hikka/utils.py
+def smart_split(
+    text: str,
+    entities: typing.List[MessageEntityUnknown],
+    length: int = 4096,
+    split_on=("\n", " "),
+    min_length: int = 1,
+) -> typing.Iterator[str]:
+    """
+    Split the message into smaller messages.
+    A grapheme will never be broken. Entities will be displaced to match the right location. No inputs will be mutated.
+    The end of each message except the last one is stripped of characters from [split_on]
+    :param text: the plain text input
+    :param entities: the entities
+    :param length: the maximum length of a single message
+    :param split_on: characters (or strings) which are preferred for a message break
+    :param min_length: ignore any matches on [split_on] strings before this number of characters into each message
+    :return: iterator, which returns strings
+
+    :example:
+        >>> utils.smart_split(
+            *HTMLParser(
+                "<b>Hello, world!</b>"
+            )
+        )
+        <<< ["<b>Hello, world!</b>"]
+    """
+
+    # Authored by @bsolute
+    # https://t.me/LonamiWebs/27777
+
+    encoded = text.encode("utf-16le")
+    pending_entities = entities
+    text_offset = 0
+    bytes_offset = 0
+    text_length = len(text)
+    bytes_length = len(encoded)
+
+    while text_offset < text_length:
+        if bytes_offset + length * 2 >= bytes_length:
+            yield HTMLParser.unparse(
+                text[text_offset:],
+                list(sorted(pending_entities, key=lambda x: x.offset)),
+            )
+            break
+
+        codepoint_count = len(
+            encoded[bytes_offset : bytes_offset + length * 2].decode(
+                "utf-16le",
+                errors="ignore",
+            )
+        )
+
+        for search in split_on:
+            search_index = text.rfind(
+                search,
+                text_offset + min_length,
+                text_offset + codepoint_count,
+            )
+            if search_index != -1:
+                break
+        else:
+            search_index = text_offset + codepoint_count
+
+        split_index = grapheme.safe_split_index(text, search_index)
+
+        split_offset_utf16 = (
+            len(text[text_offset:split_index].encode("utf-16le"))
+        ) // 2
+        exclude = 0
+
+        while (
+            split_index + exclude < text_length
+            and text[split_index + exclude] in split_on
+        ):
+            exclude += 1
+
+        current_entities = []
+        entities = pending_entities.copy()
+        pending_entities = []
+
+        for entity in entities:
+            if (
+                entity.offset < split_offset_utf16
+                and entity.offset + entity.length > split_offset_utf16 + exclude
+            ):
+                # spans boundary
+                current_entities.append(
+                    _copy_tl(
+                        entity,
+                        length=split_offset_utf16 - entity.offset,
+                    )
+                )
+                pending_entities.append(
+                    _copy_tl(
+                        entity,
+                        offset=0,
+                        length=entity.offset
+                        + entity.length
+                        - split_offset_utf16
+                        - exclude,
+                    )
+                )
+            elif entity.offset < split_offset_utf16 < entity.offset + entity.length:
+                # overlaps boundary
+                current_entities.append(
+                    _copy_tl(
+                        entity,
+                        length=split_offset_utf16 - entity.offset,
+                    )
+                )
+            elif entity.offset < split_offset_utf16:
+                # wholly left
+                current_entities.append(entity)
+            elif (
+                entity.offset + entity.length
+                > split_offset_utf16 + exclude
+                > entity.offset
+            ):
+                # overlaps right boundary
+                pending_entities.append(
+                    _copy_tl(
+                        entity,
+                        offset=0,
+                        length=entity.offset
+                        + entity.length
+                        - split_offset_utf16
+                        - exclude,
+                    )
+                )
+            elif entity.offset + entity.length > split_offset_utf16 + exclude:
+                # wholly right
+                pending_entities.append(
+                    _copy_tl(
+                        entity,
+                        offset=entity.offset - split_offset_utf16 - exclude,
+                    )
+                )
+
+        current_text = text[text_offset:split_index]
+        yield HTMLParser.unparse(
+            current_text,
+            list(sorted(current_entities, key=lambda x: x.offset)),
+        )
+
+        text_offset = split_index + exclude
+        bytes_offset += len(current_text.encode("utf-16le"))
 
 
 async def create_group(
@@ -460,6 +613,42 @@ async def set_avatar(
     return True
 
 
+# https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L879C1-L886C63
+def chunks(
+    _list: typing.List, n: int = 4096, /
+) -> typing.List[typing.List[typing.Any]]:
+    """
+    Split provided `_list` into chunks of `n`
+    :param _list: List to split
+    :param n: Chunk size
+    :return: List of chunks
+
+    For example:
+    .. code-block:: python
+    >>> chunks([1, 2, 3, 4, 5, 6], 2)
+    >>> [[1, 2], [3, 4], [5, 6]]
+    """
+    return [_list[i : i + n] for i in range(0, len(_list), n)]
+
+
+# https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L862-L876
+def get_link(user: typing.Union[types.User, types.Channel], /) -> str:
+    """
+    Get telegram permalink to entity
+    :param user: User or channel
+    :return: Link to entity
+    """
+    return (
+        f"tg://user?id={user.id}"
+        if isinstance(user, types.User)
+        else (
+            f"tg://resolve?domain={user.username}"
+            if getattr(user, "username", None)
+            else ""
+        )
+    )
+
+
 async def answer(
     message: Union[Message, List[Message]],
     response: Union[str, Any],
@@ -482,33 +671,53 @@ async def answer(
     :param parse_mode: Markdown/HTML
     :return: `Message`
     """
+    if not message:
+        logging.error("No passed message")
+        return
+
     client = message._client
     chat = get_chat(message)
     reply_to = get_topic(message) if topic else message.id
 
+    msg = None
+    split = False
     if parse_mode.lower() == "html":
         parse_mode = HTMLParser
+        split = True
 
     if isinstance(message, list):
         message: Message = message[0]
 
     if isinstance(response, str) and not photo and not document:
         if len(response) > 4096:
-            file = io.BytesIO(response.encode())
-            file.name = "response.txt"
+            try:
+                if split:
+                    response, entities = HTMLParser.parse(response)
+                    strings = list(smart_split(response, entities, 4096))
 
-            msg = await client.send_file(
-                chat,
-                file,
-                caption=f"📁 <b>Сообщение отправлено файлом</b> (<code>{len(response)}/4096</code>)",
-                parse_mode="HTML",
-                reply_to=reply_to,
-                **kwargs,
-            )
+                    for s in strings:
+                        if len(s) > 4096:
+                            raise
 
-            if message.out:
-                await message.delete()
+                    msg = await client.inline.list(message=message, strings=strings)
+                else:
+                    msg = await client.inline.list(
+                        message=message, strings=chunks(response)
+                    )
+            except Exception:
+                file = io.BytesIO(response.encode())
+                file.name = "result.txt"
 
+                msg = await client.send_file(
+                    chat,
+                    file,
+                    parse_mode=parse_mode,
+                    reply_to=reply_to,
+                    **kwargs,
+                )
+
+                if message.out:
+                    await message.delete()
         else:
             try:
                 msg = await client.edit_message(
@@ -555,40 +764,6 @@ async def invoke_inline(message: Message, bot_username: str, inline_id: str):
 
     return await query[0].click(
         get_chat(message), reply_to=message.reply_to_msg_id or None
-    )
-
-
-# https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L879C1-L886C63
-def chunks(_list: typing.List, n: int, /) -> typing.List[typing.List[typing.Any]]:
-    """
-    Split provided `_list` into chunks of `n`
-    :param _list: List to split
-    :param n: Chunk size
-    :return: List of chunks
-
-    For example:
-    .. code-block:: python
-    >>> chunks([1, 2, 3, 4, 5, 6], 2)
-    >>> [[1, 2], [3, 4], [5, 6]]
-    """
-    return [_list[i : i + n] for i in range(0, len(_list), n)]
-
-
-# https://github.com/hikariatama/Hikka/blob/master/hikka/utils.py#L862-L876
-def get_link(user: typing.Union[types.User, types.Channel], /) -> str:
-    """
-    Get telegram permalink to entity
-    :param user: User or channel
-    :return: Link to entity
-    """
-    return (
-        f"tg://user?id={user.id}"
-        if isinstance(user, types.User)
-        else (
-            f"tg://resolve?domain={user.username}"
-            if getattr(user, "username", None)
-            else ""
-        )
     )
 
 
@@ -792,6 +967,13 @@ async def bash_exec(command: Union[bytes, str]):
             return out.decode()
         except UnicodeDecodeError:
             return f"Unicode decode error: {out}"
+
+
+def _copy_tl(o, **kwargs):
+    d = o.to_dict()
+    del d["_"]
+    d.update(kwargs)
+    return o.__class__(**d)
 
 
 rand = random_id

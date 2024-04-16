@@ -23,7 +23,7 @@ help:
 
 manager:
   inline_hello: "☕ <b>Teagram-TL - telegram userbot based on telethon</b>"
-  errorcmd: "❌ <b>Error executing command</b>: {}\n❔ <b>Logs</b>:\n<code>{}</code>"
+  errorcmd: "<emoji document_id=5210952531676504517>❌</emoji> <b>Error executing command</b>: {}\n❔ <b>Logs</b>:\n<code>{}</code>"
 
 info:
   update: "<b>Update available</b>"
@@ -36,46 +36,46 @@ updater:
   lastver: "✔ <b>You have the latest version installed</b>"
   update: "🔁 <b>Updating...</b>"
   hupdate: "🔄 <b>Update available</b>"
-  nodialog: "❌ <b>You have blocked the bot, please unblock the bot</b>"
-  eone: "❌ <b>An error occurred while checking for an available update.</b>"
-  etwo: "❌ <b>Please make sure you have the GIT command working</b>"
-  error: "❌ <b>Error occurred: {}</b>"
+  nodialog: "<emoji document_id=5210952531676504517>❌</emoji> <b>You have blocked the bot, please unblock the bot</b>"
+  eone: "<emoji document_id=5210952531676504517>❌</emoji> <b>An error occurred while checking for an available update.</b>"
+  etwo: "<emoji document_id=5210952531676504517>❌</emoji> <b>Please make sure you have the GIT command working</b>"
+  error: "<emoji document_id=5210952531676504517>❌</emoji> <b>Error occurred: {}</b>"
   downloading: "📁 <b>Downloading requirements...</b>"
 
 loader:
-  noargs: "❌ <b>No arguments</b>"
-  noreq: "❌ <b>Import error but requirements not found</b>"
+  noargs: "<emoji document_id=5210952531676504517>❌</emoji> <b>No arguments</b>"
+  noreq: "<emoji document_id=5210952531676504517>❌</emoji> <b>Import error but requirements not found</b>"
   urlrepo: "✅ <b>Repository link has been reset</b>"
-  wrongurl: "❌ <b>Incorrect URL specified</b>"
+  wrongurl: "<emoji document_id=5210952531676504517>❌</emoji> <b>Incorrect URL specified</b>"
   yesurl: "✅ <b>Repository link has been set</b>"
-  errapi: "❌ <b>Invalid repository link.</b>\n<b>Change it using the command: dlrepo <repository link or reset></b>"
-  noalltxt: "❌ <b>No <a href=\"{modules_repo}\">all.txt</a> file found in the <a href=\"{modules_repo}\">repository</a></b>\n"
+  errapi: "<emoji document_id=5210952531676504517>❌</emoji> <b>Invalid repository link.</b>\n<b>Change it using the command: dlrepo <repository link or reset></b>"
+  noalltxt: "<emoji document_id=5210952531676504517>❌</emoji> <b>No <a href=\"{modules_repo}\">all.txt</a> file found in the <a href=\"{modules_repo}\">repository</a></b>\n"
   listmods: "📥 <b>List of available modules from <a href=\"{modules_repo}\">repository</a>:</b>\n\n<code>all</code> - download all modules\n"
   downdedreq: "✅ <b>Dependencies installed. Restart is required</b>"
-  errmod: "❌ <b>Failed to load module. See logs for details</b>"
-  modurlerr: "❌ <b>Module is unavailable via the link</b>"
-  modnameerr: "❌ <b>Incorrect module name</b>"
-  basicerr: '❌ <b>An error occurred, check the logs</b>'
-  reqerr: "❌ <b>An unexpected error occurred. See logs for details</b>"
-  loadedmod: "✅ <b>Module \"<code>{}</code>\" loaded</b>"
-  unloadedmod: "✅ <b>Module \"<code>{}</code>\" unloaded</b>"
-  reloaded: "✅ <b>Module \"<code>{}</code>\" reloaded</b>"
+  errmod: "<emoji document_id=5210952531676504517>❌</emoji> <b>Failed to load module. See logs for details</b>"
+  modurlerr: "<emoji document_id=5210952531676504517>❌</emoji> <b>Module is unavailable via the link</b>"
+  modnameerr: "<emoji document_id=5210952531676504517>❌</emoji> <b>Incorrect module name</b>"
+  basicerr: "<emoji document_id=5210952531676504517>❌</emoji> <b>An error occurred, check the logs</b>"
+  reqerr: "<emoji document_id=5210952531676504517>❌</emoji> <b>An unexpected error occurred. See logs for details</b>"
+  loadedmod: '✅ <b>Module "<code>{}</code>" loaded</b>'
+  unloadedmod: '✅ <b>Module "<code>{}</code>" unloaded</b>'
+  reloaded: '✅ <b>Module "<code>{}</code>" reloaded</b>'
   loaded: "✅ <b>Loaded <b>{}</b> out of <b>{}</b> modules</b>"
-  notfound: '❌ <b>Module {} not found</b>'
-  noreply: "❌ <b>No reply to the file</b>"
-  errunicode: "❌ <b>Incorrect file encoding</b>"
-  cantload: "❌ <b>You cannot load built-in modules</b>"
-  cantunload: "❌ <b>You cannot unload built-in modules</b>"
+  notfound: "<emoji document_id=5210952531676504517>❌</emoji> <b>Module {} not found</b>"
+  noreply: "<emoji document_id=5210952531676504517>❌</emoji> <b>No reply to the file</b>"
+  errunicode: "<emoji document_id=5210952531676504517>❌</emoji> <b>Incorrect file encoding</b>"
+  cantload: "<emoji document_id=5210952531676504517>❌</emoji> <b>You cannot load built-in modules</b>"
+  cantunload: "<emoji document_id=5210952531676504517>❌</emoji> <b>You cannot unload built-in modules</b>"
   restarting: "🔄 <b>Restarting...</b>"
-  wrongmod: '❌ <b>You specified the wrong module</b>'
-  replymod: '⚙ <b>Module <code>{}</code></b>'
-  replytoload: '📁 <b>To install the module, send <code>{}loadmod</code> as a reply to this message</b>'
+  wrongmod: "<emoji document_id=5210952531676504517>❌</emoji> <b>You specified the wrong module</b>"
+  replymod: "⚙ <b>Module <code>{}</code></b>"
+  replytoload: "📁 <b>To install the module, send <code>{}loadmod</code> as a reply to this message</b>"
   accept: "✅ Load module"
-  decline: "❌ Don't load module"
+  decline: "<emoji document_id=5210952531676504517>❌</emoji> Don't load module"
 
 translator:
-  notext: '❌ <b>You did not specify any text</b>'
-  wronglang: '❌ <b>Incorrect language (<code>{}</code>)</b>'
+  notext: "<emoji document_id=5210952531676504517>❌</emoji> <b>You did not specify any text</b>"
+  wronglang: "<emoji document_id=5210952531676504517>❌</emoji> <b>Incorrect language (<code>{}</code>)</b>"
   lang: "Language"
   pronun: "Pronunciation"
   text: "Text"
@@ -89,7 +89,7 @@ teaconfig:
   open: "👉 Open config"
   back: "◀ Back"
   close: "🛑 Close"
-  keywords_error: "❌ <b>Validation error, please check keywords</b>"
+  keywords_error: "<emoji document_id=5210952531676504517>❌</emoji> <b>Validation error, please check keywords</b>"
   change: "✍ Change"
   default: "🔄 Default"
   show: "🔎 Show"
@@ -104,44 +104,44 @@ teaconfig:
   current_value: "<b>Current value: <code>{}</code></b>\n\n"
 
 Backuper:
-  docstring: '<b>⌛ Time after which the backup will be made (In seconds)</b>'
-  attempt: '<b>👀 Attempting backup...</b>'
+  docstring: "<b>⌛ Time after which the backup will be made (In seconds)</b>"
+  attempt: "<b>👀 Attempting backup...</b>"
   done: "<b>✅ Successfully created.</b>"
   error: "<b>🚫 Error, check the logs.</b>"
 
 settings:
   flushed: "<b>✅ Logs are cleared</b>"
-  no_logs: "<b>❌ <b>You did not specify the level or indicated the wrong log level:</b>\n"
-  no_lvl: "<b>❌ <b>Invalid log level {lvl} ({name})</b>\n"
+  no_logs: "<b><emoji document_id=5210952531676504517>❌</emoji> <b>You did not specify the level or indicated the wrong log level:</b>\n"
+  no_lvl: "<b><emoji document_id=5210952531676504517>❌</emoji> <b>Invalid log level {lvl} ({name})</b>\n"
   no_logs_at_lvl: "<b>⚠ No logs at {lvl} level!</b>"
   logs: "<b>📤 Logs with {lvl} ({name}) level</b>"
   wprefix: "<b>❔ What prefix should I change to?</b>"
   prefix: "<b>✅ The prefix has been changed to {prefixes}</b>"
   wlang: "<b>❔ What language should I change to?</b>"
-  elang: "<b>❌ Language not found. Available languages: {langs}</b>"
+  elang: "<b><emoji document_id=5210952531676504517>❌</emoji> Language not found. Available languages: {langs}</b>"
   lang: "<b>✅ The language has been changed to </b><code>{language}</code>"
   walias: "<b>❔ What alias should I add?</b>"
-  ealias: "<b>❌ The arguments specified are incorrect. Correct: addalias <new alias> <command></b>"
-  nalias: "<b>❌ Such an alias already exists</b>"
-  calias: "<b>❌ There is no such command</b>"
+  ealias: "<b><emoji document_id=5210952531676504517>❌</emoji> The arguments specified are incorrect. Correct: addalias <new alias> <command></b>"
+  nalias: "<b><emoji document_id=5210952531676504517>❌</emoji> Such an alias already exists</b>"
+  calias: "<b><emoji document_id=5210952531676504517>❌</emoji> There is no such command</b>"
   alias: "<b>✅ The alias <code>{alias}</code> for the command <code>{cmd}</code> has been added</b>"
   dwalias: "<b>❔ Which alias should be deleted?</b>"
-  dealias: "<b>❌ There is no such alias</b>"
+  dealias: "<b><emoji document_id=5210952531676504517>❌</emoji> There is no such alias</b>"
   dalias: "<b>✅ Alias <code>{}</code> has been removed</b>"
   noalias: "<b>There are no aliases</b>"
   allalias: "<b>🗄 All aliases:</b>\n"
   ping: "<b>Telegram response time</b>"
   uptime: "<b>Uptime</b>"
-  noreply: "<b>❌ You didn't specify the reply</b>"
-  yourself: "<b>❌ You cannot indicate yourself</b>"
-  owner: "<b>❌ The command is allowed only to the owner</b>"
+  noreply: "<b><emoji document_id=5210952531676504517>❌</emoji> You didn't specify the reply</b>"
+  yourself: "<b><emoji document_id=5210952531676504517>❌</emoji> You cannot indicate yourself</b>"
+  owner: "<b><emoji document_id=5210952531676504517>❌</emoji> The command is allowed only to the owner</b>"
   adduser: "<b>✔ You have successfully added a user</b>"
   deluser: "<b>✔ You have successfully deleted a user</b>"
   nouser: "<b>❔ No users found</b>"
   user: "<b>Users:</b>"
   chbot: "<b>✔ You succesfully changed inline bot!\nRestart for changes (<code>{}</code>)</b>"
   iname_ch: "<b>You succesfully changed <code>{cur}</code> bot's name from <code>{last}</code> to <code>{cur}</code></b>"
-  noargs: "❌ <b>No arguments</b>"
+  noargs: "<emoji document_id=5210952531676504517>❌</emoji> <b>No arguments</b>"
 
 dump:
   dumped: "Dump created"

@@ -27,7 +27,15 @@ class Auth:
         manual: bool = True,
     ) -> None:
         if manual:
-            self._check_api_tokens()
+            config = configparser.ConfigParser()
+            if not config.read("./config.ini"):
+                config["telethon"] = {
+                    "api_id": input("Enter API id: "),
+                    "api_hash": input("Enter API hash: "),
+                }
+
+                with open("./config.ini", "w") as file:
+                    config.write(file)
 
         if db.get("teagram.loader", "web_success", ""):
             db.pop("teagram.loader", "web_success")
@@ -50,19 +58,6 @@ class Auth:
             device_model=device_model,
             app_version=f"v{__version__}",
         )
-
-    def _check_api_tokens(self) -> bool:
-        config = configparser.ConfigParser()
-        if not config.read("./config.ini"):
-            config["telethon"] = {
-                "api_id": input("Enter API id: "),
-                "api_hash": input("Enter API hash: "),
-            }
-
-            with open("./config.ini", "w") as file:
-                config.write(file)
-
-        return True
 
     async def _2fa(self) -> str:
         password = await self.app(GetPasswordRequest())
