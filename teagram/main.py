@@ -41,15 +41,15 @@ class TeagramStreamHandler(logging.StreamHandler):
             "NOTSET": [],
         }
 
-        with open("teagram.log", "w", encoding="utf-8") as l:  # noqa: E741
-            l.write("")
+        with open("teagram.log", "w", encoding="utf-8") as file:
+            file.write("")
 
     def emit(self, record):
         lvl = logging.getLevelName(record.levelno)
         self.logs[lvl].append(record)
 
-        with open("teagram.log", "a", encoding="utf-8") as l:  # noqa: E741
-            l.write(f"{self.format(record)}\n")
+        with open("teagram.log", "a", encoding="utf-8") as file:
+            file.write(f"{self.format(record)}\n")
 
         super().emit(record)
 
