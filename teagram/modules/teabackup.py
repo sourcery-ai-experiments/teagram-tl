@@ -12,14 +12,16 @@
 from .. import loader, utils, validators
 from ..types import Config, ConfigValue
 
-from loguru import logger
-
 import os
+
+import logging
 import zipfile
 import asyncio
 
 from time import time
 from ..wrappers import wrap_function_to_async
+
+logger = logging.getLogger()
 
 
 @wrap_function_to_async

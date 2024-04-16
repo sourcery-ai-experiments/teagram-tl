@@ -175,7 +175,7 @@ def get_chat(message: Message) -> typing.Optional[int]:
     :param message: Message to get chat of
     :return: int or None if not present
     """
-    return message.chat.id if message.chat else None or message._chat_peer
+    return message.chat.id if message.chat else message._chat_peer
 
 
 def get_chat_id(message: Message) -> typing.Optional[int]:
