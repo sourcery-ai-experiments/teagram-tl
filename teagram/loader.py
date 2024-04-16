@@ -28,11 +28,19 @@ from importlib.util import spec_from_file_location, module_from_spec
 from typing import Union, List, Dict, Any, Callable
 from types import FunctionType, LambdaType
 
-from telethon import TelegramClient, types
+from telethon import TelegramClient
+from telethon import types as teletypes
 
-from . import dispatcher, utils, database, bot, translation, permissions
-from . import validators as _validators
-from . import types as ttypes
+from . import (
+    dispatcher,
+    utils,
+    database,
+    bot,
+    translation,
+    permissions,
+    types,
+    validators,  # noqa: F401
+)
 
 logger = logging.getLogger()
 
@@ -48,11 +56,11 @@ class Loop:
     ):
         """Args, kwargs using in start"""
 
-        self.func = func
-        self.interval = interval
+        self.func: FunctionType = func
+        self.interval: Union[int, float] = interval
         self.autostart = autostart
         self.status = False
-        self.task = None
+        self.task: asyncio.Future = None
         self.method = None
 
         if self.autostart:
@@ -125,7 +133,6 @@ class Module:
 
     async def on_unload(self) -> Any: ...
 
-    # same as on_load but with some args
     async def client_ready(self, client, db): ...
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -158,89 +165,100 @@ class StringLoader(SourceLoader):
 
 
 def get_command_handlers(instance: Module) -> Dict[str, FunctionType]:
+    """Get command handlers from a module instance."""
     command_handlers = {}
+
     for method_name in dir(instance):
-        iscmd = hasattr(getattr(instance, method_name), "is_command")
-        if callable(getattr(instance, method_name)) and (
-            len(method_name) > 4 if not iscmd else True
+        method = getattr(instance, method_name)
+
+        if callable(method) and (
+            method_name.endswith("_cmd") or method_name.endswith("cmd")
         ):
             if method_name.endswith("_cmd"):
-                command_handlers[method_name[:-4].lower()] = getattr(
-                    instance, method_name
-                )
+                command_name = method_name[:-4].lower()
             elif method_name.endswith("cmd"):
-                command_handlers[method_name[:-3].lower()] = getattr(
-                    instance, method_name
-                )
-            elif iscmd:
-                method_name = method_name.replace("_cmd", "").replace("cmd", "")
-                command_handlers[method_name] = getattr(instance, method_name)
+                command_name = method_name[:-3].lower()
+            else:
+                command_name = method_name.lower()
+            command_handlers[command_name] = method
 
     return command_handlers
 
 
 def get_watcher_handlers(instance: "Module") -> List[FunctionType]:
-    return [
-        method
-        for method in dir(instance)
-        if callable(getattr(instance, method))
-        and (method.startswith("watcher") or hasattr(method, "watcher"))
-    ]
+    """Get watcher handlers from a module instance."""
+    watcher_handlers = []
+
+    for method_name in dir(instance):
+        method = getattr(instance, method_name)
+
+        if callable(method) and (
+            method_name.startswith("watcher") or hasattr(method, "watcher")
+        ):
+            watcher_handlers.append(method)
+
+    return watcher_handlers
 
 
 def get_message_handlers(instance: Module) -> Dict[str, FunctionType]:
-    return {
-        method_name[:-16].lower(): getattr(instance, method_name)
-        for method_name in dir(instance)
-        if (
-            callable(getattr(instance, method_name))
-            and len(method_name) > 16
-            and method_name.endswith("_message_handler")
-        )
-    }
+    """Get message handlers from a module instance."""
+    message_handlers = {}
+
+    for method_name in dir(instance):
+        if method_name.endswith("_message_handler"):
+            method = getattr(instance, method_name)
+            if callable(method) and len(method_name) > 16:
+                command_name = method_name[:-16].lower()
+                message_handlers[command_name] = method
+
+    return message_handlers
 
 
 def get_callback_handlers(instance: Module) -> Dict[str, FunctionType]:
-    return {
-        method_name[:-17].lower(): getattr(instance, method_name)
-        for method_name in dir(instance)
-        if (
-            callable(getattr(instance, method_name))
-            and len(method_name) > 17
-            and method_name.endswith("_callback_handler")
-        )
-    }
+    """Get callback handlers from a module instance."""
+    callback_handlers = {}
+
+    for method_name in dir(instance):
+        if method_name.endswith("_callback_handler"):
+            method = getattr(instance, method_name)
+            if callable(method) and len(method_name) > 17:
+                callback_name = method_name[:-17].lower()
+                callback_handlers[callback_name] = method
+
+    return callback_handlers
 
 
 def get_inline_handlers(instance: Module) -> Dict[str, Callable]:
+    """Get inline handlers from a module instance."""
     inline_handlers = {}
 
     for method_name in dir(instance):
-        if callable(getattr(instance, method_name)) and (
+        method = getattr(instance, method_name)
+
+        if callable(method) and (
             (len(method_name) > 15 and method_name.endswith("_inline_handler"))
-            or hasattr(getattr(instance, method_name), "is_inline_handler")
+            or hasattr(method, "is_inline_handler")
         ):
             key = (
                 method_name[:-15].lower()
                 if len(method_name) > 15
                 else method_name.lower()
             )
-            value = getattr(instance, method_name.lower())
-            inline_handlers[key] = value
+            inline_handlers[key] = method
 
     return inline_handlers
 
 
-def get_loops(instance: Module):
+def get_loops(instance: Module) -> List[FunctionType]:
+    """Get loop functions from a module instance."""
     loops = []
 
-    for method in dir(instance):
-        func = getattr(instance, method)
+    for method_name in dir(instance):
+        func = getattr(instance, method_name)
         if (
-            callable(getattr(instance, method))
+            callable(func)
             and hasattr(func, "loop")
-            and method.startswith("loop")
-            or method.endswith("loop")
+            and (method_name.startswith("loop") or method_name.endswith("loop"))
         ):
             loops.append(func)
 
@@ -332,18 +350,15 @@ def tds(cls: type):
 owner = permissions.owner
 unrestricted = permissions.unrestricted
 
-
-# hikka support
-ModuleConfig = ttypes.Config
-ConfigValue = ttypes.HikkaValue
-validators = _validators
+ModuleConfig = types.Config
+ConfigValue = types.HikkaValue
 
 
 class ModulesManager:
     """Manager of modules"""
 
     def __init__(
-        self, client: TelegramClient, db: database.Database, me: types.User
+        self, client: TelegramClient, db: database.Database, me: teletypes.User
     ) -> None:
         self.modules: List[Module] = []
         self.watcher_handlers: List[FunctionType] = []
@@ -358,37 +373,26 @@ class ModulesManager:
 
         self._client: TelegramClient = client
         self._db: database.Database = db
-        self.me: types.User = me
+        self.me: teletypes.User = me
         self.warnings: List[str] = []
 
         langpack = utils.get_langpack()
-        while not langpack:  # idk why, but sometimes it returns None
+        while not langpack:
             langpack = utils.get_langpack()
 
         self.aliases: dict = self._db.get(__name__, "aliases", {})
         self.strings: dict = langpack.get("manager")
+
         self.translator = translation.Translator(self._db)
-        self.core_modules = [
-            "backuper",
-            "teaconfig",
-            "dump",
-            "eval",
-            "help",
-            "info",
-            "loader",
-            "settings",
-            "terminal",
-            "updater",
-        ]
 
         self.dp: dispatcher.DispatcherManager = None
         self.bot_manager: bot.BotManager = None
-        self.inline: bot.BotManager = None  # same as bot_manager
+        self.inline: bot.BotManager = None
 
         self.security = permissions.Security(self._db)
 
     async def load(self, app: TelegramClient) -> bool:
-        setattr(app, "loader", self)
+        app.loader = self
 
         self.dp = dispatcher.DispatcherManager(app, self)
         await self.dp.load()
@@ -399,8 +403,8 @@ class ModulesManager:
         self.inline = self.bot_manager
         self.me.phone = None
 
-        setattr(app, "inline", self.inline)
-        setattr(app, "inline_bot", self.inline.bot)
+        app.inline = app.inline_bot = self.inline
+
         for local_module in filter(
             lambda file_name: file_name.endswith(".py")
             and not file_name.startswith("_"),
@@ -457,11 +461,8 @@ class ModulesManager:
         instance.callback_handlers = get_callback_handlers(instance)
         instance.inline_handlers = get_inline_handlers(instance)
 
-        if (
-            not instance.name
-            or instance.name.lower() == "unknown"
-            and (name := getattr(instance, "strings", {}).get("name", ""))
-        ):
+        name = getattr(instance, "strings", {}).get("name", "")
+        if not instance.name or instance.name.lower() == "unknown" and name:
             instance.name = name
 
         instance.strings = translation.Strings(instance, self.translator)
@@ -631,7 +632,8 @@ class ModulesManager:
         if is_replace:
             module = module_name
         else:
-            if not (module := self.lookup(module_name)):
+            module = self.lookup(module_name)
+            if not module:
                 return False
 
             try:
@@ -639,7 +641,8 @@ class ModulesManager:
             except Exception as error:
                 logger.exception(error)
 
-            if (get_module := inspect.getmodule(module)).__spec__.origin != "<string>":
+            get_module = inspect.getmodule(module)
+            if get_module.__spec__.origin != "<string>":
                 set_modules = set(self._db.get(__name__, "modules", []))
                 self._db.set(
                     "teagram.loader",
