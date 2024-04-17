@@ -406,11 +406,12 @@ async def create_group(
     description: str,
     megagroup: bool = False,
     broadcast: bool = False,
+    forum: bool = False,
 ):
     await fw_protect()
     return await app(
         CreateChannelRequest(
-            title, description, megagroup=megagroup, broadcast=broadcast
+            title, description, megagroup=megagroup, broadcast=broadcast, forum=forum
         )
     )
 
