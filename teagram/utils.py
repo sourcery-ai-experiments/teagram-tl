@@ -104,7 +104,8 @@ def get_args(message: Message) -> str:
 
 
 def get_args_raw(message: Message) -> str:
-    if not (message := getattr(message, "message", message)):
+    message = getattr(message, "message", message)
+    if not message:
         return False
 
     if not isinstance(message, str):
@@ -174,7 +175,7 @@ def get_chat(message: Message) -> typing.Optional[int]:
     :param message: Message to get chat of
     :return: int or None if not present
     """
-    return message.chat.id if message.chat else None or message._chat_peer
+    return message.chat.id if message.chat else message._chat_peer
 
 
 def get_chat_id(message: Message) -> typing.Optional[int]:
@@ -405,11 +406,12 @@ async def create_group(
     description: str,
     megagroup: bool = False,
     broadcast: bool = False,
+    forum: bool = False,
 ):
     await fw_protect()
     return await app(
         CreateChannelRequest(
-            title, description, megagroup=megagroup, broadcast=broadcast
+            title, description, megagroup=megagroup, broadcast=broadcast, forum=forum
         )
     )
 
@@ -906,7 +908,8 @@ def get_langpack() -> Any:
     Returns:
         Any: The language pack.
     """
-    if not (lang := database.db.get("teagram.loader", "lang", "")):
+    lang = database.db.get("teagram.loader", "lang", "")
+    if not lang:
         database.db.set("teagram.loader", "lang", "en")
 
         get_langpack()
@@ -957,7 +960,8 @@ async def bash_exec(command: Union[bytes, str]):
         stderr=asyncio.subprocess.PIPE,
     )
 
-    if not (out := await a.stdout.read(-1)):
+    out = await a.stdout.read(-1)
+    if not out:
         try:
             return (await a.stderr.read(-1)).decode()
         except UnicodeDecodeError:

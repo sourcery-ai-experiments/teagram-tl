@@ -28,32 +28,6 @@ teagram = sys.modules["teagram"]
 sys.modules["teagram.inline"] = teagram.bot
 
 
-class TeagramStreamHandler(logging.StreamHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.logs = {
-            "INFO": [],
-            "WARNING": [],
-            "ERROR": [],
-            "CRITICAL": [],
-            "DEBUG": [],
-            "NOTSET": [],
-        }
-
-        with open("teagram.log", "w", encoding="utf-8") as file:
-            file.write("")
-
-    def emit(self, record):
-        lvl = logging.getLevelName(record.levelno)
-        self.logs[lvl].append(record)
-
-        with open("teagram.log", "a", encoding="utf-8") as file:
-            file.write(f"{self.format(record)}\n")
-
-        super().emit(record)
-
-
 class Main:
     def __init__(self, args) -> None:
         self.db = database.db

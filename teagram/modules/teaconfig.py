@@ -27,13 +27,15 @@ class TeaConfigMod(loader.Module):
         self._bot: Bot = self.inline.bot
 
     def keywords(self, config, option: str) -> str:
-        if not (validator := getattr(config.config[option], "validator")):
+        validator = getattr(config.config[option], "validator")
+        if not validator:
             return ""
 
         if isinstance(validator, validators.Hidden):
             return "👥 <b>Hidden validator</b>"
 
-        if not (keywords := getattr(validator.type, "keywords", "")):
+        keywords = getattr(validator.type, "keywords", "")
+        if not keywords:
             return ""
 
         keys = list(keywords.items())
