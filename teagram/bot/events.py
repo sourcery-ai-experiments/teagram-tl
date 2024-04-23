@@ -299,10 +299,8 @@ class Events(Item):
 
         possible = None
         try:
-            if (
-                len(vars_ := inspect.getfullargspec(func).args) > 3
-                and vars_[3] == "args"
-            ):
+            vars_ = inspect.getfullargspec(func).args
+            if len(vars_) > 3 and vars_[3] == "args":
                 possible = await func(inline_query, args)
             else:
                 possible = await func(inline_query)

@@ -115,7 +115,8 @@ class SettingsMod(loader.Module):
 
     async def setprefix_cmd(self, message: types.Message, args: str):
         """Изменить префикс, можно несколько штук разделённые пробелом. Использование: setprefix <префикс> [префикс, ...]"""
-        if not (args := args.split()):
+        args = args.split()
+        if not args:
             return await utils.answer(message, self.strings["wprefix"])
 
         self.db.set("teagram.loader", "prefixes", list(set(args)))
@@ -151,7 +152,8 @@ class SettingsMod(loader.Module):
 
     async def addalias_cmd(self, message: types.Message, args: str):
         """Добавить алиас. Использование: addalias <новый алиас> <команда>"""
-        if not (args := args.lower().split(maxsplit=1)):
+        args = args.lower().split(maxsplit=1)
+        if not args:
             return await utils.answer(message, self.strings["walias"])
 
         if len(args) != 2:
@@ -173,7 +175,8 @@ class SettingsMod(loader.Module):
 
     async def delalias_cmd(self, message: types.Message, args: str):
         """Удалить алиас. Использование: delalias <алиас>"""
-        if not (args := args.lower()):
+        args = args.split()
+        if not args:
             return await utils.answer(message, self.strings["dwalias"])
 
         aliases = self.manager.aliases
@@ -220,7 +223,8 @@ class SettingsMod(loader.Module):
 
     @loader.command()
     async def addowner(self, message: types.Message):
-        if not (reply := await message.message.get_reply_message()):
+        reply = await message.message.get_reply_message()
+        if not reply:
             return await utils.answer(message, self.strings["noreply"])
 
         if reply.sender_id == (_id := (await self.client.get_me()).id):
@@ -237,7 +241,8 @@ class SettingsMod(loader.Module):
 
     @loader.command()
     async def rmowner(self, message: types.Message):
-        if not (reply := await message.message.get_reply_message()):
+        reply = await message.message.get_reply_message()
+        if not reply:
             return await utils.answer(message, self.strings["noreply"])
 
         if reply.sender_id == (_id := (await self.client.get_me()).id):
