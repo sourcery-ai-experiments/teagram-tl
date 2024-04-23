@@ -9,17 +9,19 @@
 #                                    🔒 Licensed under the СС-by-NC
 #                                 https://creativecommons.org/licenses/by-nc/4.0/
 
-from telethon import types, TelegramClient
 from .. import loader, utils, validators
 from ..types import Config, ConfigValue
 
-from loguru import logger
-
 import os
+
+import logging
 import zipfile
 import asyncio
+
 from time import time
 from ..wrappers import wrap_function_to_async
+
+logger = logging.getLogger()
 
 
 @wrap_function_to_async
@@ -77,9 +79,8 @@ class BackuperMod(loader.Module):
         if self.config["backupInterval"]:
             self.toloop.start()
 
-    async def backup(self):
-        self.client: TelegramClient
-        backup = await create_backup("./teagram/modules/", "")
+    async def backup(self, path: str = "./teagram/modules/", db: bool = False):
+        backup = await create_backup(path, "", db)
 
         if backup[1]:
             await self.client.send_file(
@@ -99,27 +100,22 @@ class BackuperMod(loader.Module):
 
     @loader.loop(1, autostart=True)
     async def toloop(self):
-        if not (interval := self.config["backupInterval"]):
+        interval = self.config["backupInterval"]
+        if not interval:
             await asyncio.sleep(10)
 
         await asyncio.sleep(interval)
         await self.backup()
 
     @loader.command("Backup mods")
-    async def backupmods(self, message: types.Message):
+    async def backupmods(self, message):
         """Бекап модулей"""
-        await utils.answer(message, self.strings["attempt"])
 
+        await utils.answer(message, self.strings["attempt"])
         await self.backup()
 
     @loader.command("Backup db")
-    async def backupdb(self, message: types.Message):
+    async def backupdb(self, message):
         await utils.answer(message, self.strings["attempt"])
 
-        backup = await create_backup(".", "", True)
-        if backup[1]:
-            await utils.answer(message, self.strings["done"])
-        else:
-            logger.error(backup[0])
-
-            await utils.answer(message, self.strings["error"])
+        await self.backup(".", True)

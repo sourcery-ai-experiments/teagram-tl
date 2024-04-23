@@ -63,19 +63,8 @@ class BotManager(Events, TokenManager):
 
         if not self._token:
             self._token = await self._revoke_token()
-            new = True
-            revoke = True
 
-        if not self._token:
             new = True
-
-            self._token = await self._create_bot()
-        if not self._token:
-            logger.error(error_text)
-            sys.exit(1)
-        if not self._token:
-            logging.error(error_text)
-            sys.exit(1)
 
         try:
             self.bot = Bot(self._token, parse_mode="html")
@@ -93,8 +82,9 @@ class BotManager(Events, TokenManager):
             else:
                 self._token = result
 
+        self.me = await self.bot.get_me()
         if new:
-            name = (await self.bot.get_me()).username
+            name = self.me.username
             await self._app(StartBotRequest(name, name, "start"))
 
             if revoke:
@@ -128,7 +118,6 @@ class BotManager(Events, TokenManager):
 
                     logger.info("Bot revoked successfully")
 
-        self.me = await self.bot.get_me()
         self.bot_id = self.me.id
 
         self._db.set("teagram.bot", "token", self._token)
