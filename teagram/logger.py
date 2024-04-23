@@ -1,6 +1,7 @@
 import logging
 import asyncio
 
+from typing import List
 from . import utils
 
 
@@ -23,7 +24,7 @@ class TeagramLogs(logging.StreamHandler):
         """Non-formatted logs"""
         return self.buffer
 
-    def dumps(self, lvl: int = 0) -> list[logging.LogRecord]:
+    def dumps(self, lvl: int = 0) -> List[logging.LogRecord]:
         """Logs with ... level"""
         return [self.format(record) for record in self.dump() if record.levelno >= lvl]
 

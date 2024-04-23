@@ -174,7 +174,8 @@ class LoaderMod(loader.Module):
                 except requests.exceptions.RequestException:
                     continue
 
-                if not (module_name := await self.manager.load_module(r.text, r.url)):
+                module_name = await self.manager.load_module(r.text, r.url)
+                if not module_name:
                     continue
 
                 self.db.set(
@@ -339,7 +340,8 @@ class LoaderMod(loader.Module):
         if args in modules:
             return await utils.answer(message, self.strings["cantunload"])
 
-        if not args or not (module_name := self.manager.unload_module(args)):
+        module_name = self.manager.unload_module(args)
+        if not args or not module_name:
             return await utils.answer(message, self.strings["notfound"].format(args))
 
         return await utils.answer(
@@ -377,9 +379,8 @@ class LoaderMod(loader.Module):
 
     @loader.command("Скинуть модуль из папки модулей", "mlmod")
     async def showmod(self, message: types.Message, args):
-        if not (mod := args.split()) or f"{mod[0]}.py" not in os.listdir(
-            "teagram/modules"
-        ):
+        mod = args.split()
+        if not mod or f"{mod[0]}.py" not in os.listdir("teagram/modules"):
             return await utils.answer(message, self.strings["wrongmod"])
 
         await utils.answer(

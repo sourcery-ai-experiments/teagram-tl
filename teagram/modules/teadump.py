@@ -7,12 +7,14 @@ import platform
 import logging
 import atexit
 import json
+
 from git import Repo
 
 PATH = f"{BASE_PATH}/dump.json"
 REPO = Repo(BASE_DIR)
 
 logger = logging.getLogger()
+dump = {}
 
 
 class DumpMod(loader.Module):
@@ -84,6 +86,7 @@ class DumpMod(loader.Module):
     @loader.loop(5, autostart=True)
     async def dumploop(self):
         global data, dump
+
         result = self.gen()
         data = result
         dump = self.get("dump_on_unload")

@@ -9,7 +9,7 @@
 #                                    🔒 Licensed under the СС-by-NC
 #                                 https://creativecommons.org/licenses/by-nc/4.0/
 
-from typing import Union, Type
+from typing import Union, Type, List
 from functools import partial
 
 ALLOWED_TYPES = Union[int, str, bool, None]
@@ -156,7 +156,7 @@ class Choice(Validator):
         value: ALLOWED_TYPES,
         /,
         *,
-        possible_values: list[ALLOWED_TYPES],
+        possible_values: List[ALLOWED_TYPES],
     ) -> ALLOWED_TYPES:
         if value not in possible_values:
             raise ValidationError(
